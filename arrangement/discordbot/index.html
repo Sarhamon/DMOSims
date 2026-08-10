@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>거래 중개 봇 기획 문서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f5f6f3;
+    --panel:#ffffff;
+    --ink:#1b2430;
+    --ink-soft:#5a6472;
+    --ink-faint:#8b93a0;
+    --line:#dfe2dd;
+    --teal:#2f6f62;
+    --teal-deep:#1f4d43;
+    --amber:#c97a2b;
+    --amber-soft:#f4e6d3;
+    --red:#a3402f;
+    --red-soft:#f3ddd6;
+    --sidebar-w:260px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.7;
+  }
+  h1,h2,h3{font-family:'Newsreader',serif;font-weight:500;color:var(--ink);}
+  code, .tag{font-family:'IBM Plex Mono',monospace;}
+
+  .layout{display:flex;max-width:1180px;margin:0 auto;}
+
+  /* Sidebar */
+  nav.toc{
+    width:var(--sidebar-w);
+    flex-shrink:0;
+    padding:64px 24px 64px 32px;
+    position:sticky;
+    top:0;
+    align-self:flex-start;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .toc-brand{font-family:'Newsreader',serif;font-size:15px;font-style:italic;color:var(--ink-faint);margin-bottom:36px;}
+  .toc-list{list-style:none;padding:0;margin:0;}
+  .toc-list li{margin-bottom:2px;}
+  .toc-list a{
+    display:block;
+    padding:7px 10px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    font-size:13.5px;
+    border-radius:5px;
+    border-left:2px solid transparent;
+  }
+  .toc-list a:hover{color:var(--ink);background:rgba(0,0,0,0.03);}
+  .toc-num{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);font-size:11px;margin-right:6px;}
+  .toc-status{
+    display:inline-block;
+    margin-top:28px;
+    padding:8px 12px;
+    background:var(--amber-soft);
+    border-radius:6px;
+    font-size:12px;
+    color:#7a4a10;
+    line-height:1.5;
+  }
+
+  /* Main */
+  main{flex:1;padding:64px 56px 120px 56px;min-width:0;}
+
+  .doc-header{margin-bottom:56px;padding-bottom:36px;border-bottom:1px solid var(--line);}
+  .doc-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:14px;
+  }
+  .doc-header h1{font-size:34px;margin:0 0 14px 0;line-height:1.25;}
+  .doc-sub{color:var(--ink-soft);font-size:15.5px;max-width:640px;}
+  .meta-row{display:flex;gap:28px;margin-top:24px;font-size:12.5px;color:var(--ink-faint);}
+  .meta-row div span{display:block;color:var(--ink-soft);font-size:13.5px;margin-top:3px;font-family:'IBM Plex Mono',monospace;}
+
+  section{margin-bottom:64px;scroll-margin-top:40px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:18px;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);}
+  section h2{font-size:23px;margin:0;}
+  .sec-lede{color:var(--ink-soft);font-size:14.5px;max-width:680px;margin-bottom:24px;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:24px 26px;
+    margin-bottom:16px;
+  }
+  .card h3{font-size:16px;margin:0 0 8px 0;}
+  .card p{margin:0;color:var(--ink-soft);font-size:14.5px;}
+  .card p + p{margin-top:8px;}
+
+  .flow{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--panel);
+  }
+  .flow-step{
+    display:flex;
+    gap:18px;
+    padding:18px 24px;
+    border-bottom:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .flow-step:last-child{border-bottom:none;}
+  .flow-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--teal-deep);
+    background:#e6efec;
+    border-radius:5px;
+    padding:3px 8px;
+    flex-shrink:0;
+    margin-top:2px;
+  }
+  .flow-step h4{margin:0 0 4px 0;font-size:14.5px;font-weight:600;color:var(--ink);}
+  .flow-step p{margin:0;font-size:13.5px;color:var(--ink-soft);}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  th,td{text-align:left;padding:12px 16px;font-size:13.5px;border-bottom:1px solid var(--line);}
+  th{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);background:#fafaf8;font-weight:500;}
+  tr:last-child td{border-bottom:none;}
+  td.mono{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--teal-deep);}
+
+  .stage-row td:first-child{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);}
+  .stage-final{color:var(--red);font-weight:600;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:760px){.two-col{grid-template-columns:1fr;}}
+
+  .compare-card{border-radius:10px;border:1px solid var(--line);padding:22px 24px;background:var(--panel);}
+  .compare-card.internal{border-left:3px solid var(--ink-faint);}
+  .compare-card.external{border-left:3px solid var(--red);}
+  .compare-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);margin-bottom:8px;}
+  .compare-card h3{font-size:16px;margin:0 0 12px 0;}
+  .compare-card ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-soft);}
+  .compare-card li{margin-bottom:6px;}
+
+  .pill{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    padding:3px 9px;
+    border-radius:20px;
+    background:var(--amber-soft);
+    color:#7a4a10;
+  }
+  .pill.open{background:var(--red-soft);color:var(--red);}
+
+  .open-list{list-style:none;padding:0;margin:0;}
+  .open-list li{
+    display:flex;
+    gap:14px;
+    padding:16px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .open-list li:last-child{border-bottom:none;}
+  .open-list .n{font-family:'IBM Plex Mono',monospace;color:var(--ink-faint);flex-shrink:0;}
+  .open-list strong{display:block;margin-bottom:4px;font-family:'Newsreader',serif;font-weight:500;font-size:15px;}
+  .open-list span{color:var(--ink-soft);font-size:13.5px;}
+
+  .divider-note{
+    font-size:12.5px;
+    color:var(--ink-faint);
+    padding:14px 18px;
+    border-left:2px solid var(--line);
+    margin-top:14px;
+  }
+
+  footer{
+    max-width:680px;
+    padding-top:32px;
+    border-top:1px solid var(--line);
+    color:var(--ink-faint);
+    font-size:12.5px;
+  }
+
+  @media (max-width:900px){
+    .layout{flex-direction:column;}
+    nav.toc{position:relative;width:100%;height:auto;padding:32px 24px;}
+    main{padding:40px 24px 100px 24px;}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="toc">
+    <div class="toc-brand">거래 중개 봇 · 기획 노트</div>
+    <ul class="toc-list">
+      <li><a href="#overview"><span class="toc-num">00</span>개요</a></li>
+      <li><a href="#auth"><span class="toc-num">01</span>인증</a></li>
+      <li><a href="#trade-flow"><span class="toc-num">02</span>거래 등록 흐름</a></li>
+      <li><a href="#trust"><span class="toc-num">03</span>신뢰 신호</a></li>
+      <li><a href="#fraud"><span class="toc-num">04</span>사기 신고·제재</a></li>
+      <li><a href="#appeal"><span class="toc-num">05</span>이의제기</a></li>
+      <li><a href="#lists"><span class="toc-num">06</span>그레이/블랙리스트</a></li>
+      <li><a href="#misconduct"><span class="toc-num">07</span>인게임 비매너</a></li>
+      <li><a href="#stack"><span class="toc-num">08</span>기술 스택 메모</a></li>
+      <li><a href="#open"><span class="toc-num">09</span>미정 사항</a></li>
+    </ul>
+    <div class="toc-status">현재 상태: 아이디어 구상 단계<br>배포 계획 없음</div>
+  </nav>
+
+  <main>
+    <header class="doc-header" id="overview">
+      <div class="doc-eyebrow">Planning Draft</div>
+      <h1>범용 유저간 거래 중개 봇 기획 문서</h1>
+      <p class="doc-sub">메이플스토리 라운지 형태의 유저간 거래·커뮤니티 기능을 공식 API가 없는 게임에서도 운영할 수 있도록, 디스코드 봇 기반으로 설계한 기획 정리본.</p>
+      <div class="meta-row">
+        <div>1차 적용 대상<span>디지몬마스터즈 (DMO)</span></div>
+        <div>수익 모델<span>완전 무료 커뮤니티</span></div>
+        <div>거래 방식<span>매칭·중개 전용 (에스크로 없음)</span></div>
+      </div>
+    </header>
+
+    <section id="auth">
+      <div class="sec-head"><span class="sec-num">01</span><h2>인증</h2></div>
+      <p class="sec-lede">서버 참여 자체보다, 매크로·부계정을 걸러내는 진입 장벽을 우선한다.</p>
+      <div class="two-col">
+        <div class="card">
+          <h3>디스코드 인증</h3>
+          <p>서버 인증 레벨을 최고 단계로 설정해 휴대폰 인증이 완료된 계정만 채팅 권한을 얻도록 한다.</p>
+        </div>
+        <div class="card">
+          <h3>가입 승인 큐</h3>
+          <p>신청 시 계정 생성일·가입 패턴 등 리스크 신호를 자동 수집해 관리자 채널에 게시하고, 매크로 의심 시 관리자가 직접 승인/거절한다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="trade-flow">
+      <div class="sec-head"><span class="sec-num">02</span><h2>거래 등록 흐름</h2></div>
+      <p class="sec-lede">유저가 직접 글을 쓰지 않고, 봇이 모달 입력을 받아 정형화된 형태로 게시한다.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <span class="flow-badge">01</span>
+          <div><h4>등록 요청</h4><p>유저가 명령어 실행 → 봇이 모달(아이템명·가격·설명) 표시. 10분당 1회로 제한.</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">02</span>
+          <div><h4>리스팅 게시</h4><p>모달 제출 시 봇이 거래 채널에 임베드 + [구매하기] 버튼으로 게시.</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">03</span>
+          <div><h4>매칭</h4><p>구매자가 버튼 클릭 → 비공개 스레드(티켓) 개설, 판매자·구매자·봇 초대.</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">04</span>
+          <div><h4>거래 완료</h4><p>[거래완료] 버튼 클릭 시 리스팅 상태 변경, 완료 거래 건수 반영. 원본 메시지는 삭제 대신 "판매완료" 표시.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="sec-head"><span class="sec-num">03</span><h2>신뢰 신호</h2></div>
+      <p class="sec-lede">별점·평가형 평판 시스템은 조작에 취약하고 관리 부담이 커 채택하지 않는다. 대신 조작이 어려운 최소 신호만 노출한다.</p>
+      <div class="two-col">
+        <div class="card">
+          <h3>인증 경과일</h3>
+          <p>예: "인증 127일차" — 가입일 기반이라 조작 불가능.</p>
+        </div>
+        <div class="card">
+          <h3>완료 거래 건수</h3>
+          <p>평가 없이 숫자만 카운트. 예: "완료 거래 12건".</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="fraud">
+      <div class="sec-head"><span class="sec-num">04</span><h2>사기 신고 · 제재</h2></div>
+      <p class="sec-lede">에스크로가 없는 구조에서는 신고·제재 절차가 사실상 유일한 안전장치다.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <span class="flow-badge">신고</span>
+          <div><h4>접수 시점</h4><p>거래 진행 중 상시 가능 + 거래 완료 후 일정 기간 내 추가 접수 가능.</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">처리</span>
+          <div><h4>에스컬레이션</h4><p>관리자 전용 채널로 자동 전달 + 해당 거래 스레드 즉시 잠금(증거 보존).</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">기준</span>
+          <div><h4>정당 신고 3회</h4><p>관리자가 근거를 확인해 "유효 신고"로 인정한 건수만 카운트 — 단순 신고 접수 횟수가 아님(허위 신고 어뷰징 방지).</p></div>
+        </div>
+        <div class="flow-step">
+          <span class="flow-badge">결과</span>
+          <div><h4>제재 수위</h4><p>정당 신고 3회 누적 → 서버 추방. 사기 확정 → 영구밴 + 블랙리스트 등재.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="appeal">
+      <div class="sec-head"><span class="sec-num">05</span><h2>이의제기</h2></div>
+      <p class="sec-lede">제재 대상자의 이의제기와, 원 신고자의 소명 요청을 분리해서 둔다.</p>
+      <table>
+        <tr><th>항목</th><th>규정</th></tr>
+        <tr><td>신청 주체</td><td>제재 당사자</td></tr>
+        <tr><td>가능 기간</td><td class="mono">제재 후 3개월 이내</td></tr>
+        <tr><td>횟수</td><td class="mono">1회 (신청~심사완료를 하나의 건으로 취급, 자료 보완 왕복은 소진 안 됨)</td></tr>
+        <tr><td>심사자</td><td>원 제재 결정자가 아닌 다른 관리자가 교차검증</td></tr>
+        <tr><td>인용 시</td><td>공개 블랙리스트에서만 삭제 (내부 그레이리스트는 유지) + 원 신고자에게 소명 요청 창구 오픈</td></tr>
+        <tr><td>기각 시</td><td>블랙리스트 유지, 재이의제기 영구 불가</td></tr>
+      </table>
+      <div class="divider-note">소명 요청 창구는 판정을 다시 뒤집는 절차가 아니라, 원 신고자에게 번복 사유를 설명하는 데 한정한다.</div>
+    </section>
+
+    <section id="lists">
+      <div class="sec-head"><span class="sec-num">06</span><h2>그레이리스트 · 블랙리스트</h2></div>
+      <p class="sec-lede">공개 페이지와 내부 기록을 분리해, 오판 정정과 이력 보존을 동시에 만족시킨다.</p>
+      <div class="two-col">
+        <div class="compare-card internal">
+          <div class="compare-label">내부 전용</div>
+          <h3>그레이리스트</h3>
+          <ul>
+            <li>관리자만 열람 가능</li>
+            <li>삭제되지 않고 영구 보존</li>
+            <li>신고 원본·증거·심사 과정·이의제기 이력 전체 기록</li>
+            <li>재범 추적, 소명 요청 대응의 근거 자료로 사용</li>
+          </ul>
+        </div>
+        <div class="compare-card external">
+          <div class="compare-label">외부 공개</div>
+          <h3>블랙리스트</h3>
+          <ul>
+            <li>전체 유저 열람 가능</li>
+            <li>이의제기 인용 시 즉시 삭제</li>
+            <li>현재 유효한 제재 대상자만 노출</li>
+            <li>디스코드 ID + 증거 기반 기재, 실명·닉네임 낙인 최소화</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="misconduct">
+      <div class="sec-head"><span class="sec-num">07</span><h2>인게임 비매너 트랙</h2></div>
+      <p class="sec-lede">거래 사기와 성격이 달라 별도 트랙으로 분리한다. 서버 추방 없이 거래 등록 권한만 제한한다.</p>
+      <table style="margin-bottom:16px;">
+        <tr><th>누적</th><th>제한 기간</th></tr>
+        <tr class="stage-row"><td>1차</td><td class="mono">3일</td></tr>
+        <tr class="stage-row"><td>2차</td><td class="mono">7일</td></tr>
+        <tr class="stage-row"><td>3차</td><td class="mono">14일</td></tr>
+        <tr class="stage-row"><td>4차</td><td class="mono">30일</td></tr>
+        <tr class="stage-row"><td>5차</td><td class="mono stage-final">영구 (이의제기로만 해제)</td></tr>
+      </table>
+      <div class="card">
+        <h3>증거 기준 <span class="pill">영상 또는 복수 목격자 필수</span></h3>
+        <p>게임 내 스크린샷은 조작 가능성이 높아 단독 증거로 인정하지 않는다. 확정 시 <code>can_trade = false</code> 플래그만 부여하며, 채팅·서버 이용 등 다른 권한은 그대로 유지한다.</p>
+      </div>
+      <div class="divider-note">이의제기 규정은 사기 트랙과 동일하게 3개월 이내 / 1회 / 교차검증을 우선 적용. 처벌 수위가 가벼운 만큼 추후 간소화 여지 있음(미정 사항 참고).</div>
+    </section>
+
+    <section id="stack">
+      <div class="sec-head"><span class="sec-num">08</span><h2>기술 스택 메모</h2></div>
+      <p class="sec-lede">배포 계획은 없지만, 실제 착수 시 참고용으로 검토했던 방향.</p>
+      <div class="card">
+        <h3>서버리스 (Cloudflare Workers + D1)</h3>
+        <p>디스코드 HTTP Interactions Endpoint 방식으로 상시 서버 없이 운영 가능. 커맨드·모달·버튼 상호작용은 전부 커버되나, 실시간 게이트웨이 이벤트(입장 감지 등)는 별도 검토 필요.</p>
+      </div>
+    </section>
+
+    <section id="open">
+      <div class="sec-head"><span class="sec-num">09</span><h2>미정 사항</h2></div>
+      <p class="sec-lede">다음 논의에서 이어갈 항목.</p>
+      <ul class="open-list">
+        <li>
+          <span class="n">·</span>
+          <div><strong>비매너 트랙 이의제기 간소화 여부 <span class="pill open">open</span></strong><span>현재는 사기 트랙과 동일한 규정을 적용 중. 처벌 수위 차이를 감안해 담당자 단독 재검토로 완화할지 검토 필요.</span></div>
+        </li>
+        <li>
+          <span class="n">·</span>
+          <div><strong>DMO 외 게임으로의 확장 로드맵 <span class="pill open">open</span></strong><span>범용 설계이나 실제 확장 시 게임별 채널/카테고리 구조를 어떻게 나눌지 미정.</span></div>
+        </li>
+        <li>
+          <span class="n">·</span>
+          <div><strong>소명 요청 창구 세부 UX <span class="pill open">open</span></strong><span>버튼/티켓 형태, 응답 기한 등 구체적인 흐름은 아직 설계 전.</span></div>
+        </li>
+      </ul>
+    </section>
+
+    <footer>
+      아이디어 구상 단계 기록 — 실제 개발 착수 전 언제든 갱신될 수 있는 문서입니다.
+    </footer>
+  </main>
+</div>
+</body>
+</html>
