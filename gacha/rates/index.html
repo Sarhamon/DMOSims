@@ -10,44 +10,76 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../../img/dmo.png">
-    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/tool.css">
+    <link rel="stylesheet" href="../../css/app.css">
     <meta property="og:title" content="DMOKit - 가챠 확률 보기">
     <meta property="og:description" content="드로우/소환/융합 아이템 목록과 확률 정보">
     <meta property="og:image" content="../../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="가챠 메뉴로">← 가챠</a>
-        <div class="header-content">
-            <h2>가챠 확률 보기</h2>
-            <p class="subtitle">각 풀의 아이템 목록과 확률을 확인하세요</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="card">
-        <div class="rate-tabs" id="rateTabs">
-            <button class="mode-btn active" data-cat="draw">데이터 드로우</button>
-            <button class="mode-btn" data-cat="summon">데이터 소환</button>
-            <button class="mode-btn" data-cat="fusion">데이터 융합</button>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <a class="crumb-link mono" href="../">Gacha</a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Rates</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Gacha 04 / Drop Rates</p>
+            <h1 class="page-title">가챠 확률 보기</h1>
+            <p class="page-sub">드로우 · 소환 · 융합 각 풀의 아이템 목록과 확률을 확인합니다.</p>
         </div>
 
-        <div class="draw-selector">
-            <label for="poolSelect">풀 선택</label>
-            <select id="poolSelect"></select>
-            <div class="draw-meta" id="poolMeta">—</div>
-        </div>
-    </div>
+        <div class="views shell">
+            <div class="panel">
+                <div class="rate-tabs" id="rateTabs">
+                    <button class="mode-btn active" data-cat="draw">데이터 드로우</button>
+                    <button class="mode-btn" data-cat="summon">데이터 소환</button>
+                    <button class="mode-btn" data-cat="fusion">데이터 융합</button>
+                </div>
 
-    <div class="card">
-        <h3 class="section-title">아이템 목록 <span class="result-count" id="rateCount"></span></h3>
-        <div class="rate-list" id="rateList">
-            <div class="empty-msg">풀을 선택해주세요.</div>
-        </div>
-    </div>
+                <div class="draw-selector">
+                    <label for="poolSelect">풀 선택</label>
+                    <select id="poolSelect"></select>
+                    <div class="draw-meta" id="poolMeta">—</div>
+                </div>
+            </div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+            <div class="panel">
+                <h3 class="section-title">아이템 목록 <span class="result-count" id="rateCount"></span></h3>
+                <div class="rate-list" id="rateList">
+                    <div class="empty-msg">풀을 선택해주세요.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../../js/gacha/rates.js"></script>
 </body>

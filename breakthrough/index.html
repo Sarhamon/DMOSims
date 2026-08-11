@@ -10,72 +10,102 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
     <meta property="og:title" content="DMO 돌파 옵션 시뮬레이터">
     <meta property="og:description" content="돌파 단계를 진행하며 옵션 능력치를 누적해보는 시뮬레이터.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>DMO 돌파 옵션 시뮬레이터</h2>
-            <p class="subtitle">강조된 칸을 클릭해 돌파 시도</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="card bt-layout">
-        <div class="bt-main">
-            <div class="bt-toolbar">
-                <div class="bt-toolbar-btns">
-                    <button id="btRandom" class="reset-btn">🎲 랜덤 능력치</button>
-                    <button id="btRetry" class="reset-btn">↻ 다시시도</button>
-                </div>
-            </div>
-            <div class="bt-rows" id="btRows"></div>
-            <p class="bt-hint" id="btHint"></p>
-            <div class="bt-total">
-                <div class="bt-total-title">총 획득 스탯</div>
-                <div class="bt-total-list" id="btTotal"></div>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Breakthrough</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
             </div>
         </div>
-        <aside class="bt-side">
-            <div class="bt-prob-box">
-                <div class="bt-prob-title">성공 확률</div>
-                <div class="bt-prob-main" id="btProb">75%</div>
-                <div class="bt-prob-stages">
-                    <div><span>1단계</span><b id="btS1">59%</b></div>
-                    <div><span>2단계</span><b id="btS2">15%</b></div>
-                    <div><span>3단계</span><b id="btS3">1%</b></div>
-                </div>
-            </div>
-            <div class="bt-prob-box">
-                <div class="bt-prob-title">돌파 시도 횟수</div>
-                <div class="bt-prob-main"><span id="btCount">0</span> / 40</div>
-            </div>
-            <div class="bt-prob-box">
-                <div class="bt-prob-title">돌파 주사위 비용</div>
-                <div class="bt-dice-used">주사위 사용 <b id="btDice">0</b> 개</div>
-                <label class="bt-price">1개 가격
-                    <span class="opt-price-fields">
-                        <input type="number" id="btPriceT" min="0" inputmode="numeric" value="0"><i>T</i>
-                        <input type="number" id="btPriceM" min="0" max="999" inputmode="numeric" value="0"><i>M</i>
-                        <input type="number" id="btPriceB" min="0" max="999" inputmode="numeric" value="0"><i>B</i>
-                    </span>
-                </label>
-                <div class="bt-cost-total">총 비용 <b id="btCostTotal">0B</b></div>
-                <button class="reset-btn bt-dice-reset" id="btDiceReset">사용 갯수 초기화</button>
-            </div>
-            <div class="bt-prob-box">
-                <div class="bt-prob-title">옵션 선택</div>
-                <div class="bt-opt-list" id="btOptList"></div>
-            </div>
-        </aside>
-    </div>
+    </header>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 04 / Breakthrough</p>
+            <h1 class="page-title">돌파 옵션 시뮬레이터</h1>
+            <p class="page-sub">강조된 칸을 클릭해 돌파를 시도하고, 단계별 능력치 누적과 주사위 비용을 확인합니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="panel bt-layout">
+                <div class="bt-main">
+                    <div class="bt-toolbar">
+                        <div class="bt-toolbar-btns">
+                            <button id="btRandom" class="reset-btn">랜덤 능력치</button>
+                            <button id="btRetry" class="reset-btn">다시시도</button>
+                        </div>
+                    </div>
+                    <div class="bt-rows" id="btRows"></div>
+                    <p class="bt-hint" id="btHint"></p>
+                    <div class="bt-total">
+                        <div class="bt-total-title">총 획득 스탯</div>
+                        <div class="bt-total-list" id="btTotal"></div>
+                    </div>
+                </div>
+                <aside class="bt-side">
+                    <div class="bt-prob-box">
+                        <div class="bt-prob-title">성공 확률</div>
+                        <div class="bt-prob-main" id="btProb">75%</div>
+                        <div class="bt-prob-stages">
+                            <div><span>1단계</span><b id="btS1">59%</b></div>
+                            <div><span>2단계</span><b id="btS2">15%</b></div>
+                            <div><span>3단계</span><b id="btS3">1%</b></div>
+                        </div>
+                    </div>
+                    <div class="bt-prob-box">
+                        <div class="bt-prob-title">돌파 시도 횟수</div>
+                        <div class="bt-prob-main"><span id="btCount">0</span> / 40</div>
+                    </div>
+                    <div class="bt-prob-box">
+                        <div class="bt-prob-title">돌파 주사위 비용</div>
+                        <div class="bt-dice-used">주사위 사용 <b id="btDice">0</b> 개</div>
+                        <label class="bt-price">1개 가격
+                            <span class="opt-price-fields">
+                                <input type="number" id="btPriceT" min="0" inputmode="numeric" value="0"><i>T</i>
+                                <input type="number" id="btPriceM" min="0" max="999" inputmode="numeric" value="0"><i>M</i>
+                                <input type="number" id="btPriceB" min="0" max="999" inputmode="numeric" value="0"><i>B</i>
+                            </span>
+                        </label>
+                        <div class="bt-cost-total">총 비용 <b id="btCostTotal">0B</b></div>
+                        <button class="reset-btn bt-dice-reset" id="btDiceReset">사용 갯수 초기화</button>
+                    </div>
+                    <div class="bt-prob-box">
+                        <div class="bt-prob-title">옵션 선택</div>
+                        <div class="bt-opt-list" id="btOptList"></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/breakthrough/main.js"></script>
 </body>

@@ -1,0 +1,361 @@
+/* ==========================================================================
+   DMOKit — 도구 페이지 컴포넌트 (탭 / 폼 / 리드아웃 / 표)
+   css/base.css 다음에 로드한다.
+   ========================================================================== */
+
+/* 탭 ---------------------------------------------------------------------- */
+.mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+}
+.tab-link {
+    position: relative;
+    padding: 11px 20px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-faint);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.18s, border-color 0.18s;
+}
+.tab-link:hover { color: var(--ink); }
+.tab-link.active { color: var(--accent-ink); border-bottom-color: var(--accent); }
+
+/* 패널 -------------------------------------------------------------------- */
+.panel {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--bg-elev);
+    padding: 24px;
+    margin-bottom: 16px;
+}
+.panel--flush { padding: 0; overflow: hidden; }
+
+/* 입력 폼 ----------------------------------------------------------------- */
+.input-group {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 18px 22px;
+}
+
+/* 한글 라벨: 모노 서체는 유지하되 자간을 벌리지 않고 크기를 키운다 */
+.field-label {
+    display: block;
+    margin-bottom: 9px;
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+}
+
+.input-wrapper { display: flex; flex-direction: column; }
+
+input[type="number"] {
+    width: 128px;
+    height: 44px;
+    padding: 0 13px;
+    font-family: var(--mono);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+input[type="number"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-wash);
+}
+input[type="number"]::placeholder { color: var(--ink-faint); }
+
+/* 선택 칩 — 랭킹 페이지처럼 항목이 많아 줄바꿈되는 경우까지 견디도록 독립 칩으로 둔다 */
+.journal-radios { display: flex; flex-wrap: wrap; gap: 6px; }
+.radio-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    padding: 0 15px;
+    cursor: pointer;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    transition: color 0.18s, background-color 0.18s, border-color 0.18s;
+}
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.label-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-faint);
+    white-space: nowrap;
+}
+.radio-option:hover .label-text { color: var(--ink); }
+.radio-option:has(input:checked) {
+    background: var(--accent-wash);
+    border-color: var(--accent);
+}
+.radio-option:has(input:checked) .label-text { color: var(--accent-ink); }
+.radio-option:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 버튼 -------------------------------------------------------------------- */
+button.calc-btn {
+    height: 44px;
+    padding: 0 22px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent-ink);
+    border: 1px solid var(--accent-ink);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: opacity 0.18s, box-shadow 0.18s;
+}
+button.calc-btn:hover { opacity: 0.88; box-shadow: var(--glow); }
+button.calc-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+button.calc-btn.secondary {
+    color: var(--ink-dim);
+    background: transparent;
+    border-color: var(--line-strong);
+}
+button.calc-btn.secondary:hover {
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    opacity: 1;
+    box-shadow: none;
+}
+
+/* 보조 버튼 (수집 / 돌파) */
+.reset-btn {
+    height: 40px;
+    padding: 0 16px;
+    font-family: var(--sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink-dim);
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.18s, border-color 0.18s;
+}
+.reset-btn:hover { color: var(--accent-ink); border-color: var(--accent); }
+.reset-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 셀렉트 / 텍스트 입력 / 텍스트에어리어 ------------------------------------ */
+select {
+    height: 44px;
+    padding: 0 34px 0 13px;
+    font-family: var(--sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    background-color: var(--bg);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 16px center, right 11px center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+
+input[type="text"] {
+    height: 44px;
+    padding: 0 13px;
+    font-family: var(--sans);
+    font-size: 0.9375rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+}
+input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+input[type="text"]::placeholder { color: var(--ink-faint); }
+
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); cursor: pointer; }
+
+/* 섹션 제목 --------------------------------------------------------------- */
+.section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin: 0 0 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+}
+.result-count { font-family: var(--mono); font-size: 0.8125rem; font-weight: 400; color: var(--ink-faint); }
+
+/* 패널 안내 문단 */
+.panel-desc { margin: 0 0 16px; font-size: 0.9063rem; line-height: 1.7; color: var(--ink-dim); }
+.panel-desc b { color: var(--ink); font-weight: 600; }
+
+/* 결과 리드아웃 ----------------------------------------------------------- */
+.readout {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 16px 4px 20px;
+}
+.readout-label { color: var(--ink-faint); font-size: 0.75rem; letter-spacing: 0.01em; }
+.readout-value {
+    font-family: var(--mono);
+    font-size: 1.375rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--accent-ink);
+}
+
+/* 표 ---------------------------------------------------------------------- */
+.table-container { overflow-x: auto; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 820px;
+}
+/* 표 머리글은 한글이라 sans + 정상 자간. 터미널 느낌은 배경/괘선/본문 모노가 낸다 */
+th {
+    padding: 13px 12px;
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-align: center;
+    white-space: nowrap;
+    color: var(--ink-faint);
+    background: var(--bg-sunken);
+    border-bottom: 1px solid var(--line-strong);
+}
+td {
+    padding: 12px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--line);
+}
+tbody tr:last-child td { border-bottom: none; }
+td b { font-weight: 600; color: var(--ink); }
+td small { color: var(--ink-faint); font-size: 0.8em; }
+
+.col-name {
+    text-align: left;
+    font-family: var(--sans);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+.col-percent { color: var(--amber); font-weight: 600; }
+
+/* 1위 행 */
+.rank-1 { background: var(--accent-wash); }
+.rank-1 td { color: var(--accent-ink); font-weight: 600; }
+.rank-1 td:first-child {
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+.rank-1 .col-percent, .rank-1 td b { color: var(--accent-ink); }
+
+/* 입장 불가 행 */
+.locked td { color: var(--ink-faint); }
+.locked-hidden { display: none; }
+
+.divider-row { cursor: pointer; user-select: none; }
+.divider-row td {
+    padding: 9px 12px;
+    font-family: var(--sans);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--ink-faint);
+    background: var(--bg-sunken);
+    border-top: 1px dashed var(--line-strong);
+    border-bottom: 1px dashed var(--line-strong);
+    transition: color 0.18s;
+}
+.divider-row:hover td { color: var(--accent-ink); }
+
+.total-row td {
+    background: var(--bg-sunken);
+    border-top: 1px solid var(--accent);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.empty-msg {
+    padding: 44px 20px;
+    color: var(--ink-faint);
+    font-family: var(--sans);
+    font-size: 0.9375rem;
+}
+
+/* 뱃지 -------------------------------------------------------------------- */
+.req-badge,
+.runs-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+.req-badge {
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+}
+.runs-badge {
+    color: var(--accent-ink);
+    background: var(--accent-wash);
+    border: 1px solid transparent;
+}
+.locked .req-badge { color: var(--amber); border-color: var(--amber-wash); background: var(--amber-wash); }
+.rank-1 .runs-badge { border-color: var(--accent); }
+
+/* 가로 스크롤 안내 */
+.table-hint {
+    display: none;
+    padding: 10px 4px 0;
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    letter-spacing: 0.01em;
+}
+@media (max-width: 900px) { .table-hint { display: block; } }
+
+.views { padding-bottom: 96px; }
+
+@media (max-width: 640px) {
+    .panel { padding: 18px; }
+    .input-group { gap: 14px 16px; }
+    .input-wrapper, .journal-radios, button.calc-btn { width: 100%; }
+    input[type="number"] { width: 100%; }
+    .journal-radios .radio-option { flex: 1; padding: 0 8px; }
+    .tab-link { flex: 1; text-align: center; padding: 11px 8px; }
+}

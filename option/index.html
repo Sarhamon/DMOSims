@@ -10,30 +10,60 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
     <meta property="og:title" content="DMO 옵션 변경 시뮬레이터">
     <meta property="og:description" content="장비 · 악세사리 슬롯을 클릭해 옵션을 변경해보는 시뮬레이터.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>DMO 옵션 변경 시뮬레이터</h2>
-            <p class="subtitle">슬롯을 클릭해 장비 · 악세사리 옵션 변경</p>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Option</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    </header>
 
-    <div class="card opt-layout">
-        <div class="slot-picker" id="slotPicker"></div>
-        <aside class="opt-panel" id="optPanel">
-            <p class="opt-empty">부위를 선택하면 옵션 변경 화면이 표시됩니다.</p>
-        </aside>
-    </div>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 03 / Option Reroll</p>
+            <h1 class="page-title">옵션 변경 시뮬레이터</h1>
+            <p class="page-sub">부위를 선택하고 슬롯을 클릭해 장비 · 악세사리 옵션 변경을 시뮬레이션합니다.</p>
+        </div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+        <div class="views shell">
+            <div class="panel opt-layout">
+                <div class="slot-picker" id="slotPicker"></div>
+                <aside class="opt-panel" id="optPanel">
+                    <p class="opt-empty">부위를 선택하면 옵션 변경 화면이 표시됩니다.</p>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/option/main.js"></script>
 </body>

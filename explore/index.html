@@ -10,137 +10,180 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
     <meta property="og:title" content="DMO 탐험 계산기">
     <meta property="og:description" content="디지몬 마스터즈 온라인 탐험 수치를 쉽고 빠르게 계산해보세요.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>DMO 탐험 효율 계산기</h2>
-            <p class="subtitle">Lv.140 ~ Lv.170 탐험 효율 분석</p>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Explore</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    </header>
 
-    <nav class="mode-tabs">
-        <a href="#/normal" data-route="/normal" class="tab-link">판당 계산</a>
-        <a href="#/target" data-route="/target" class="tab-link">목표 레벨까지</a>
-    </nav>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 01 / Exploration Efficiency</p>
+            <h1 class="page-title">탐험 효율 계산기</h1>
+            <p class="page-sub">탐험지별 판당 경험치와 시간당 효율을 비교하고, 목표 레벨까지 필요한 횟수를 계산합니다.</p>
+        </div>
 
-    <div class="card">
-        <section id="view-normal" data-view="/normal">
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <label for="userLevel">현재 레벨</label>
-                    <input type="number" id="userLevel" min="1" max="180" value="140">
+        <div class="views shell">
+            <nav class="mode-tabs">
+                <a href="#/normal" data-route="/normal" class="tab-link">판당 계산</a>
+                <a href="#/target" data-route="/target" class="tab-link">목표 레벨까지</a>
+            </nav>
+
+            <section id="view-normal" data-view="/normal">
+                <div class="panel">
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="userLevel">현재 레벨</label>
+                            <input type="number" id="userLevel" min="1" max="180" value="140">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="currentPercent">현재 경험치 (%)</label>
+                            <input type="number" id="currentPercent" min="0" max="99.9999" step="0.0001" value="0" placeholder="0.0000">
+                        </div>
+                        <div class="input-wrapper">
+                            <span class="field-label mono">경험치 일지</span>
+                            <div class="journal-radios">
+                                <label class="radio-option">
+                                    <span class="label-text">미사용</span>
+                                    <input type="radio" name="journal-normal" value="0" checked>
+                                </label>
+                                <label class="radio-option">
+                                    <span class="label-text">일지 I</span>
+                                    <input type="radio" name="journal-normal" value="1">
+                                </label>
+                                <label class="radio-option">
+                                    <span class="label-text">일지 II</span>
+                                    <input type="radio" name="journal-normal" value="2">
+                                </label>
+                            </div>
+                        </div>
+                        <button class="calc-btn" id="normalCalcBtn">계산하기</button>
+                    </div>
                 </div>
-                <div class="input-wrapper">
-                    <label for="currentPercent">현재 경험치 (%)</label>
-                    <input type="number" id="currentPercent" min="0" max="99.9999" step="0.0001" value="0" placeholder="0.0000">
-                </div>
-                <div class="journal-radios">
-                    <label class="radio-option">
-                        <span class="label-text">미사용</span>
-                        <input type="radio" name="journal-normal" value="0" checked>
-                    </label>
-                    <label class="radio-option">
-                        <span class="label-text">일지 I</span>
-                        <input type="radio" name="journal-normal" value="1">
-                    </label>
-                    <label class="radio-option">
-                        <span class="label-text">일지 II</span>
-                        <input type="radio" name="journal-normal" value="2">
-                    </label>
-                </div>
-                <button class="calc-btn" id="normalCalcBtn">계산하기</button>
-            </div>
 
-            <div class="exp-display">
-                <span class="exp-label">필요 경험치: </span>
-                <span id="reqExpDisplay">-</span>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>순위</th>
-                            <th>탐험지</th>
-                            <th>입장제한</th>
-                            <th>시간</th>
-                            <th>판당 획득(%)</th>
-                            <th>종료 후(%)</th>
-                            <th>렙업까지</th>
-                            <th>시간당 효율</th>
-                            <th>총 소요 시간</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultBody">
-                        <tr><td class="empty-msg" colspan="9">계산 버튼을 눌러주세요.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section id="view-target" data-view="/target" hidden>
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <label for="targetCurrentLevel">현재 레벨</label>
-                    <input type="number" id="targetCurrentLevel" min="1" max="169" value="140">
+                <div class="readout">
+                    <span class="readout-label mono">필요 경험치</span>
+                    <span class="readout-value" id="reqExpDisplay">-</span>
                 </div>
-                <div class="input-wrapper">
-                    <label for="targetCurrentPercent">현재 경험치 (%)</label>
-                    <input type="number" id="targetCurrentPercent" min="0" max="99.9999" step="0.0001" value="0" placeholder="0.0000">
-                </div>
-                <div class="input-wrapper">
-                    <label for="targetGoalLevel">목표 레벨</label>
-                    <input type="number" id="targetGoalLevel" min="2" max="170" value="170">
-                </div>
-                <div class="journal-radios">
-                    <label class="radio-option">
-                        <span class="label-text">미사용</span>
-                        <input type="radio" name="journal-target" value="0" checked>
-                    </label>
-                    <label class="radio-option">
-                        <span class="label-text">일지 I</span>
-                        <input type="radio" name="journal-target" value="1">
-                    </label>
-                    <label class="radio-option">
-                        <span class="label-text">일지 II</span>
-                        <input type="radio" name="journal-target" value="2">
-                    </label>
-                </div>
-                <button class="calc-btn" id="targetCalcBtn">계산하기</button>
-            </div>
 
-            <div class="exp-display">
-                <span class="exp-label">목표: </span>
-                <span id="targetSummary">-</span>
-            </div>
+                <div class="panel panel--flush">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>순위</th>
+                                    <th>탐험지</th>
+                                    <th>입장제한</th>
+                                    <th>시간</th>
+                                    <th>판당 획득(%)</th>
+                                    <th>종료 후(%)</th>
+                                    <th>렙업까지</th>
+                                    <th>시간당 효율</th>
+                                    <th>총 소요 시간</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultBody">
+                                <tr><td class="empty-msg" colspan="9">계산 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <p class="table-hint mono">← 좌우로 스크롤하여 전체 열 보기 →</p>
+            </section>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>구간</th>
-                            <th>탐험지</th>
-                            <th>회수</th>
-                            <th>소요 시간</th>
-                        </tr>
-                    </thead>
-                    <tbody id="targetResultBody">
-                        <tr><td class="empty-msg" colspan="4">계산 버튼을 눌러주세요.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
+            <section id="view-target" data-view="/target" hidden>
+                <div class="panel">
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="targetCurrentLevel">현재 레벨</label>
+                            <input type="number" id="targetCurrentLevel" min="1" max="169" value="140">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="targetCurrentPercent">현재 경험치 (%)</label>
+                            <input type="number" id="targetCurrentPercent" min="0" max="99.9999" step="0.0001" value="0" placeholder="0.0000">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="targetGoalLevel">목표 레벨</label>
+                            <input type="number" id="targetGoalLevel" min="2" max="170" value="170">
+                        </div>
+                        <div class="input-wrapper">
+                            <span class="field-label mono">경험치 일지</span>
+                            <div class="journal-radios">
+                                <label class="radio-option">
+                                    <span class="label-text">미사용</span>
+                                    <input type="radio" name="journal-target" value="0" checked>
+                                </label>
+                                <label class="radio-option">
+                                    <span class="label-text">일지 I</span>
+                                    <input type="radio" name="journal-target" value="1">
+                                </label>
+                                <label class="radio-option">
+                                    <span class="label-text">일지 II</span>
+                                    <input type="radio" name="journal-target" value="2">
+                                </label>
+                            </div>
+                        </div>
+                        <button class="calc-btn" id="targetCalcBtn">계산하기</button>
+                    </div>
+                </div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+                <div class="readout">
+                    <span class="readout-label mono">목표</span>
+                    <span class="readout-value" id="targetSummary">-</span>
+                </div>
+
+                <div class="panel panel--flush">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>구간</th>
+                                    <th>탐험지</th>
+                                    <th>회수</th>
+                                    <th>소요 시간</th>
+                                </tr>
+                            </thead>
+                            <tbody id="targetResultBody">
+                                <tr><td class="empty-msg" colspan="4">계산 버튼을 눌러주세요.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <p class="table-hint mono">← 좌우로 스크롤하여 전체 열 보기 →</p>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/explore/main.js"></script>
 </body>

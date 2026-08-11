@@ -10,57 +10,188 @@
         }
     </script>
     <link rel="icon" type="image/png" href="img/dmo.png">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/home.css">
     <meta property="og:title" content="DMOKit">
     <meta property="og:description" content="디지몬 마스터즈 온라인 도구 모음 - 탐험 효율 계산기, 가챠 시뮬레이터">
     <meta property="og:image" content="img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <div class="header-content">
-            <h2>DMOKit</h2>
-            <p class="subtitle">디지몬 마스터즈 온라인 도구 모음</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="card">
-        <div class="menu-grid">
-            <a href="explore/" class="menu-card">
-                <div class="icon">🗺️</div>
-                <div class="title">탐험 효율 계산기</div>
-                <div class="desc">Lv.1 ~ Lv.170 탐험지별 효율 분석</div>
+    <header class="topbar">
+        <div class="shell">
+            <a class="brand" href="./">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                    <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                </svg>
+                <span class="brand-name">DMOKIT</span>
             </a>
-            <a href="gacha/" class="menu-card">
-                <div class="icon">🎲</div>
-                <div class="title">가챠 시뮬레이터</div>
-                <div class="desc">데이터 소환 / 드로우 / 융합 시뮬레이션</div>
-            </a>
-            <a href="option/" class="menu-card">
-                <div class="icon">🔧</div>
-                <div class="title">옵션 변경 시뮬레이터</div>
-                <div class="desc">악세사리 / 장비 옵션 변경 시뮬레이션</div>
-            </a>
-            <a href="breakthrough/" class="menu-card">
-                <div class="icon">💠</div>
-                <div class="title">돌파 옵션 시뮬레이터</div>
-                <div class="desc">돌파 단계별 옵션 능력치 누적 시뮬레이션</div>
-            </a>
-            <a href="ranking/" class="menu-card">
-                <div class="icon">🏆</div>
-                <div class="title">랭킹 던전 교환 계산기</div>
-                <div class="desc">무한의 투기장 재료 교환 · 제작까지 필요 시즌 계산</div>
-            </a>
-            <a href="backup/" class="menu-card">
-                <div class="icon">💾</div>
-                <div class="title">데이터 백업 / 복원</div>
-                <div class="desc">저장 데이터 내보내기 / 가져오기 (기기 이동 · 공유)</div>
-            </a>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <main>
+        <section class="hero shell">
+            <p class="eyebrow mono">Digimon Masters Online / Utility Suite</p>
+            <h1 class="hero-title">DMO <span class="accent">KIT</span></h1>
+            <p class="hero-sub">
+                탐험 효율부터 가챠 확률, 옵션 재설정 기댓값까지.
+                감이 아니라 숫자로 판단하기 위한 도구 모음입니다.
+            </p>
+            <dl class="hero-stats">
+                <div>
+                    <dt class="mono">Modules</dt>
+                    <dd>06</dd>
+                </div>
+                <div>
+                    <dt class="mono">Level Range</dt>
+                    <dd>001&ndash;170</dd>
+                </div>
+                <div>
+                    <dt class="mono">Data</dt>
+                    <dd class="ko">공식 확률 기반</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="modules shell">
+            <div class="section-head mono">
+                <h2>Modules</h2>
+                <span class="rule"></span>
+                <span class="count">06 Available</span>
+            </div>
+
+            <div class="module-grid">
+
+                <a href="explore/" class="module module--primary">
+                    <span class="module-idx mono">01</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M15.6 8.4 10.7 10.7 8.4 15.6 13.3 13.3Z"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">탐험 효율 계산기</h3>
+                    <p class="module-desc">Lv.1 ~ Lv.170 구간별 탐험지 경험치 효율과 목표 레벨까지 필요한 횟수를 계산합니다.</p>
+                    <span class="module-tag mono">
+                        Explore
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="gacha/" class="module module--primary">
+                    <span class="module-idx mono">02</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>
+                            <path d="M3.5 12h17"/>
+                            <circle cx="16.2" cy="9.2" r="1.05" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">가챠 시뮬레이터</h3>
+                    <p class="module-desc">데이터 소환 · 드로우 · 융합을 공식 확률 기반으로 시뮬레이션하고 확률표를 확인합니다.</p>
+                    <span class="module-tag mono">
+                        Gacha
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="option/" class="module">
+                    <span class="module-idx mono">03</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 8h8M17.5 8H20M4 16h4.5M14 16h6"/>
+                            <circle cx="14.7" cy="8" r="2.2"/>
+                            <circle cx="11.2" cy="16" r="2.2"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">옵션 변경</h3>
+                    <p class="module-desc">악세사리 · 장비 옵션 재설정 시뮬레이션</p>
+                    <span class="module-tag mono">
+                        Option
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="breakthrough/" class="module">
+                    <span class="module-idx mono">04</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 2.8 21.2 12 12 21.2 2.8 12Z"/>
+                            <path d="M12 7.6 16.4 12 12 16.4 7.6 12Z"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">돌파 옵션</h3>
+                    <p class="module-desc">돌파 단계별 능력치 누적 시뮬레이션</p>
+                    <span class="module-tag mono">
+                        Breakthrough
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="ranking/" class="module">
+                    <span class="module-idx mono">05</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3.2 20.2h17.6"/>
+                            <path d="M5.4 20.2v-6.4h4v6.4"/>
+                            <path d="M9.4 20.2V6.6h5.2v13.6"/>
+                            <path d="M14.6 20.2v-9.1h4v9.1"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">랭킹 던전 교환</h3>
+                    <p class="module-desc">무한의 투기장 재료 교환 · 제작 시즌 계산</p>
+                    <span class="module-tag mono">
+                        Ranking
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="backup/" class="module">
+                    <span class="module-idx mono">06</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <ellipse cx="12" cy="6.4" rx="6.8" ry="2.9"/>
+                            <path d="M5.2 6.4v11.2c0 1.6 3 2.9 6.8 2.9s6.8-1.3 6.8-2.9V6.4"/>
+                            <path d="M5.2 12c0 1.6 3 2.9 6.8 2.9s6.8-1.3 6.8-2.9"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">데이터 백업 / 복원</h3>
+                    <p class="module-desc">저장 데이터 내보내기 · 가져오기</p>
+                    <span class="module-tag mono">
+                        Backup
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="js/main.js"></script>
 </body>

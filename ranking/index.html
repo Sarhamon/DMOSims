@@ -10,71 +10,101 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
     <meta property="og:title" content="DMO 랭킹 던전 교환 계산기">
     <meta property="og:description" content="무한의 투기장 재료 교환 · 목표 아이템 제작까지 필요한 시즌 수를 계산해보세요.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>DMO 랭킹 던전 교환 계산기</h2>
-            <p class="subtitle">무한의 투기장 재료 교환 · 제작까지 필요 시즌 계산</p>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Ranking</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    </header>
 
-    <div class="card">
-        <section id="view-exchange">
-            <p class="exp-display">보유 재료와 예상 등급을 입력하고 목표 아이템을 선택하면, 영광의 편린 기준으로 환산해 제작까지 필요한 시즌 수를 계산합니다.</p>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 05 / Ranking Exchange</p>
+            <h1 class="page-title">랭킹 던전 교환 계산기</h1>
+            <p class="page-sub">무한의 투기장 재료 교환과 목표 아이템 제작까지 필요한 시즌 수를 계산합니다.</p>
+        </div>
 
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <label for="ownPyeonrin">보유 영광의 편린</label>
-                    <input type="number" id="ownPyeonrin" min="0" step="1" value="0">
-                </div>
-                <div class="input-wrapper">
-                    <label for="ownPapyeon">보유 영광의 파편</label>
-                    <input type="number" id="ownPapyeon" min="0" step="1" value="0">
-                </div>
-                <div class="input-wrapper">
-                    <label for="ownJeungpyo">보유 영광의 증표</label>
-                    <input type="number" id="ownJeungpyo" min="0" step="1" value="0">
-                </div>
-                <div class="input-wrapper">
-                    <label for="ownChowol">보유 초월의 증표</label>
-                    <input type="number" id="ownChowol" min="0" step="1" value="0">
-                </div>
+        <div class="views shell">
+            <div class="panel">
+                <section id="view-exchange">
+                    <p class="panel-desc">보유 재료와 예상 등급을 입력하고 목표 아이템을 선택하면, <b>영광의 편린</b> 기준으로 환산해 제작까지 필요한 시즌 수를 계산합니다.</p>
+
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="ownPyeonrin">보유 영광의 편린</label>
+                            <input type="number" id="ownPyeonrin" min="0" step="1" value="0">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="ownPapyeon">보유 영광의 파편</label>
+                            <input type="number" id="ownPapyeon" min="0" step="1" value="0">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="ownJeungpyo">보유 영광의 증표</label>
+                            <input type="number" id="ownJeungpyo" min="0" step="1" value="0">
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="ownChowol">보유 초월의 증표</label>
+                            <input type="number" id="ownChowol" min="0" step="1" value="0">
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <span class="field-label mono">예상 비시즌 등급 (×2회)</span>
+                            <div class="journal-radios" id="expNonseason"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <span class="field-label mono">예상 시즌 등급</span>
+                            <div class="journal-radios" id="expSeason"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <span class="field-label mono">예상 시즌 랭커 순위</span>
+                            <div class="journal-radios" id="expRanker"></div>
+                        </div>
+                        <div class="input-wrapper">
+                            <label class="field-label mono" for="clearRound">클리어한 라운드 (10당 편린 15 ×3회)</label>
+                            <input type="number" id="clearRound" min="0" max="100" step="1" value="0">
+                        </div>
+                    </div>
+
+                    <div id="exchangeList"></div>
+                </section>
             </div>
-
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <label>예상 비시즌 등급 (×2회)</label>
-                    <div class="journal-radios" id="expNonseason" style="flex-wrap:wrap"></div>
-                </div>
-                <div class="input-wrapper">
-                    <label>예상 시즌 등급</label>
-                    <div class="journal-radios" id="expSeason" style="flex-wrap:wrap"></div>
-                </div>
-                <div class="input-wrapper">
-                    <label>예상 시즌 랭커 순위</label>
-                    <div class="journal-radios" id="expRanker" style="flex-wrap:wrap"></div>
-                </div>
-                <div class="input-wrapper">
-                    <label for="clearRound">클리어한 라운드 (10당 편린 15 ×3회)</label>
-                    <input type="number" id="clearRound" min="0" max="100" step="1" value="0">
-                </div>
-            </div>
-
-            <div id="exchangeList"></div>
-        </section>
-    </div>
+        </div>
+    </main>
 
     <div id="exchangeResult" class="ex-float"><span class="ex-float-hint">목표 아이템을 선택하면 자동으로 계산됩니다.</span></div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/ranking/main.js"></script>
 </body>

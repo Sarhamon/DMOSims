@@ -10,88 +10,120 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../../img/dmo.png">
-    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/tool.css">
+    <link rel="stylesheet" href="../../css/app.css">
     <meta property="og:title" content="DMOKit - 데이터 융합 시뮬레이터">
     <meta property="og:description" content="디지몬 마스터즈 데이터 융합 - 천장 시스템 포함">
     <meta property="og:image" content="../../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="가챠 메뉴로">← 가챠</a>
-        <div class="header-content">
-            <h2>데이터 융합 시뮬레이터</h2>
-            <p class="subtitle">동일 등급 4개 → 결과 1개 (천장 시스템 포함)</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="inv-bar">
-        <span id="invCount">인벤토리: 0개</span>
-        <a href="../draw/" class="inv-link">← 드로우로</a>
-    </div>
-
-    <div class="card">
-        <div class="fusion-controls">
-            <div class="buff-group-buttons">
-                <label class="buff-toggle">
-                    <input type="radio" name="fusion-mode" value="auto" class="buff-check" checked>
-                    <span class="buff-toggle-name">자동</span>
-                </label>
-                <label class="buff-toggle">
-                    <input type="radio" name="fusion-mode" value="SSS" class="buff-check">
-                    <span class="buff-toggle-name">SSS</span>
-                </label>
-                <label class="buff-toggle">
-                    <input type="radio" name="fusion-mode" value="SSS+" class="buff-check">
-                    <span class="buff-toggle-name">SSS+</span>
-                </label>
-            </div>
-
-            <div class="fusion-avail" id="fusionAvail"></div>
-
-            <div class="mode-pane">
-                <button class="calc-btn" id="fuse10Btn">10회 합성</button>
-                <label class="auto-reveal-label">
-                    <input type="checkbox" id="autoRevealCheck"> 자동 공개
-                </label>
-            </div>
-
-            <div class="pity-display" id="pityDisplay"></div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3 class="section-title">최근 결과 <span class="result-count" id="fusionResultCount"></span></h3>
-        <div class="result-grid" id="fusionResultGrid">
-            <div class="empty-msg">합성 버튼을 눌러주세요.</div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="inv-header">
-            <h3 class="section-title">인벤토리</h3>
-            <button class="calc-btn secondary" id="clearInvBtn">인벤토리 비우기</button>
-        </div>
-
-        <div class="inv-section">
-            <h4 class="inv-section-title">진화 아이템 <span class="inv-section-count" id="invEvolutionCount"></span></h4>
-            <div class="inv-summary" id="invEvolutionSummary">—</div>
-            <div class="inv-grid" id="invEvolutionGrid">
-                <div class="empty-msg">드로우/융합 결과가 이곳에 쌓입니다.</div>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <a class="crumb-link mono" href="../">Gacha</a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Fusion</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
             </div>
         </div>
+    </header>
 
-        <div class="inv-section">
-            <h4 class="inv-section-title">기타 아이템 <span class="inv-section-count" id="invOtherCount"></span></h4>
-            <div class="inv-summary" id="invOtherSummary">—</div>
-            <div class="inv-grid" id="invOtherGrid">
-                <div class="empty-msg">데이터 소환 결과가 이곳에 쌓입니다.</div>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Gacha 03 / Data Fusion</p>
+            <h1 class="page-title">데이터 융합 시뮬레이터</h1>
+            <p class="page-sub">동일 등급 4개를 결과 1개로 합성합니다. 천장(피티) 시스템을 포함합니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="inv-bar">
+                <span id="invCount">인벤토리: 0개</span>
+                <a href="../draw/" class="inv-link">← 드로우로</a>
+            </div>
+
+            <div class="panel">
+                <div class="fusion-controls">
+                    <div class="buff-group-buttons">
+                        <label class="buff-toggle">
+                            <input type="radio" name="fusion-mode" value="auto" class="buff-check" checked>
+                            <span class="buff-toggle-name">자동</span>
+                        </label>
+                        <label class="buff-toggle">
+                            <input type="radio" name="fusion-mode" value="SSS" class="buff-check">
+                            <span class="buff-toggle-name">SSS</span>
+                        </label>
+                        <label class="buff-toggle">
+                            <input type="radio" name="fusion-mode" value="SSS+" class="buff-check">
+                            <span class="buff-toggle-name">SSS+</span>
+                        </label>
+                    </div>
+
+                    <div class="fusion-avail" id="fusionAvail"></div>
+
+                    <div class="mode-pane">
+                        <button class="calc-btn" id="fuse10Btn">10회 합성</button>
+                        <label class="auto-reveal-label">
+                            <input type="checkbox" id="autoRevealCheck"> 자동 공개
+                        </label>
+                    </div>
+
+                    <div class="pity-display" id="pityDisplay"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">최근 결과 <span class="result-count" id="fusionResultCount"></span></h3>
+                <div class="result-grid" id="fusionResultGrid">
+                    <div class="empty-msg">합성 버튼을 눌러주세요.</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="inv-header">
+                    <h3 class="section-title">인벤토리</h3>
+                    <button class="calc-btn secondary" id="clearInvBtn">인벤토리 비우기</button>
+                </div>
+
+                <div class="inv-section">
+                    <h4 class="inv-section-title">진화 아이템 <span class="inv-section-count" id="invEvolutionCount"></span></h4>
+                    <div class="inv-summary" id="invEvolutionSummary">—</div>
+                    <div class="inv-grid" id="invEvolutionGrid">
+                        <div class="empty-msg">드로우/융합 결과가 이곳에 쌓입니다.</div>
+                    </div>
+                </div>
+
+                <div class="inv-section">
+                    <h4 class="inv-section-title">기타 아이템 <span class="inv-section-count" id="invOtherCount"></span></h4>
+                    <div class="inv-summary" id="invOtherSummary">—</div>
+                    <div class="inv-grid" id="invOtherGrid">
+                        <div class="empty-msg">데이터 소환 결과가 이곳에 쌓입니다.</div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../../js/gacha/fusion.js"></script>
 </body>

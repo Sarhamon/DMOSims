@@ -10,65 +10,97 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../../img/dmo.png">
-    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/tool.css">
+    <link rel="stylesheet" href="../../css/app.css">
     <meta property="og:title" content="DMOKit - 데이터 소환 시뮬레이터">
     <meta property="og:description" content="디지몬 마스터즈 데이터 소환 - 천장 시스템 포함">
     <meta property="og:image" content="../../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="가챠 메뉴로">← 가챠</a>
-        <div class="header-content">
-            <h2>데이터 소환 시뮬레이터</h2>
-            <p class="subtitle">캡슐을 사용하여 디지몬/아이템 소환 (천장 시스템 포함)</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="inv-bar">
-        <span id="invCount">인벤토리: 0개</span>
-        <a href="../fusion/" class="inv-link">융합으로 →</a>
-    </div>
-
-    <div class="card">
-        <div class="draw-selector">
-            <label>캡슐 선택</label>
-            <div class="buff-group-buttons" id="summonPicker"></div>
-        </div>
-        <div class="draw-active" id="summonActiveSection" hidden>
-            <div class="draw-meta" id="summonMeta">—</div>
-            <div class="draw-controls">
-                <button class="calc-btn" id="summon1Btn">1회 소환</button>
-                <button class="calc-btn" id="summon10Btn">10회 소환</button>
-                <button class="calc-btn secondary" id="resetBtn">통계 초기화</button>
-                <label class="auto-reveal-label">
-                    <input type="checkbox" id="autoRevealCheck"> 자동 공개
-                </label>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <a class="crumb-link mono" href="../">Gacha</a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Summon</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
             </div>
-            <div class="pity-display" id="summonPityDisplay"></div>
         </div>
-    </div>
+    </header>
 
-    <div class="card">
-        <h3 class="section-title">누적 통계</h3>
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-label">획득 아이템</span>
-                <span class="stat-value" id="statTotal">0개</span>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Gacha 02 / Data Summon</p>
+            <h1 class="page-title">데이터 소환 시뮬레이터</h1>
+            <p class="page-sub">캡슐로 디지몬과 아이템을 소환합니다. 천장(피티) 시스템을 포함합니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="inv-bar">
+                <span id="invCount">인벤토리: 0개</span>
+                <a href="../fusion/" class="inv-link">융합으로 →</a>
             </div>
-            <div class="stat-grade-list" id="statGradeList"></div>
-        </div>
-    </div>
 
-    <div class="card">
-        <h3 class="section-title">이번 결과 <span class="result-count" id="resultCount"></span></h3>
-        <div class="result-grid" id="resultGrid">
-            <div class="empty-msg">소환 버튼을 눌러주세요.</div>
-        </div>
-    </div>
+            <div class="panel">
+                <div class="draw-selector">
+                    <label>캡슐 선택</label>
+                    <div class="buff-group-buttons" id="summonPicker"></div>
+                </div>
+                <div class="draw-active" id="summonActiveSection" hidden>
+                    <div class="draw-meta" id="summonMeta">—</div>
+                    <div class="draw-controls">
+                        <button class="calc-btn" id="summon1Btn">1회 소환</button>
+                        <button class="calc-btn" id="summon10Btn">10회 소환</button>
+                        <button class="calc-btn secondary" id="resetBtn">통계 초기화</button>
+                        <label class="auto-reveal-label">
+                            <input type="checkbox" id="autoRevealCheck"> 자동 공개
+                        </label>
+                    </div>
+                    <div class="pity-display" id="summonPityDisplay"></div>
+                </div>
+            </div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+            <div class="panel">
+                <h3 class="section-title">누적 통계</h3>
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-label">획득 아이템</span>
+                        <span class="stat-value" id="statTotal">0개</span>
+                    </div>
+                    <div class="stat-grade-list" id="statGradeList"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">이번 결과 <span class="result-count" id="resultCount"></span></h3>
+                <div class="result-grid" id="resultGrid">
+                    <div class="empty-msg">소환 버튼을 눌러주세요.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../../js/gacha/summon.js"></script>
 </body>

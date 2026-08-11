@@ -10,48 +10,135 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
     <meta property="og:title" content="DMOKit - 가챠 시뮬레이터">
     <meta property="og:description" content="디지몬 마스터즈 데이터 소환 / 드로우 / 융합 시뮬레이터">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>가챠 시뮬레이터</h2>
-            <p class="subtitle">데이터 소환 / 드로우 / 융합</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="card">
-        <div class="menu-grid menu-grid-2">
-            <a href="draw/" class="menu-card">
-                <div class="icon">🃏</div>
-                <div class="title">데이터 드로우</div>
-                <div class="desc">티켓을 사용하여 보상 드로우</div>
-            </a>
-            <a href="fusion/" class="menu-card">
-                <div class="icon">⚗️</div>
-                <div class="title">데이터 융합</div>
-                <div class="desc">보유 아이템을 융합하여 상위 보상 획득</div>
-            </a>
-            <a href="summon/" class="menu-card">
-                <div class="icon">🔮</div>
-                <div class="title">데이터 소환</div>
-                <div class="desc">캡슐을 사용하여 디지몬/아이템 소환</div>
-            </a>
-            <a href="rates/" class="menu-card">
-                <div class="icon">📊</div>
-                <div class="title">확률 보기</div>
-                <div class="desc">드로우/소환/융합 아이템 목록과 확률</div>
-            </a>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Gacha</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 02 / Gacha Simulation</p>
+            <h1 class="page-title">가챠 시뮬레이터</h1>
+            <p class="page-sub">데이터 소환 · 드로우 · 융합을 공식 확률 기반으로 시뮬레이션합니다. 실제 재화는 소모되지 않습니다.</p>
+        </div>
+
+        <section class="modules shell">
+            <div class="section-head mono">
+                <h2>Modes</h2>
+                <span class="rule"></span>
+                <span class="count">04 Available</span>
+            </div>
+
+            <div class="module-grid">
+
+                <a href="draw/" class="module module--primary">
+                    <span class="module-idx mono">01</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="8.4" y="3.6" width="11" height="15.4" rx="2"/>
+                            <path d="M6 6.4 4.2 7a2 2 0 0 0-1.3 2.5l3 10.3"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">데이터 드로우</h3>
+                    <p class="module-desc">티켓을 사용해 보상을 드로우하고, 결과를 인벤토리에 누적합니다.</p>
+                    <span class="module-tag mono">
+                        Draw
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="summon/" class="module module--primary">
+                    <span class="module-idx mono">02</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3.5" y="6.5" width="17" height="11" rx="5.5"/>
+                            <path d="M3.5 12h17"/>
+                            <circle cx="16.2" cy="9.2" r="1.05" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">데이터 소환</h3>
+                    <p class="module-desc">캡슐로 디지몬과 아이템을 소환합니다. 천장(피티) 시스템을 포함합니다.</p>
+                    <span class="module-tag mono">
+                        Summon
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="fusion/" class="module">
+                    <span class="module-idx mono">03</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M7.6 3.6v4.1L3.9 15a3 3 0 0 0 2.7 4.4h10.8a3 3 0 0 0 2.7-4.4l-3.7-7.3V3.6"/>
+                            <path d="M6.4 3.6h11.2"/>
+                            <path d="M5.2 13.4h13.6"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">데이터 융합</h3>
+                    <p class="module-desc">동일 등급 4개를 상위 보상으로 합성</p>
+                    <span class="module-tag mono">
+                        Fusion
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+                <a href="rates/" class="module">
+                    <span class="module-idx mono">04</span>
+                    <span class="module-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3.4 20.4h17.2"/>
+                            <path d="M6.4 20.4v-5.6M11 20.4V8.2M15.6 20.4v-8.4M20.2 20.4V4.4"/>
+                        </svg>
+                    </span>
+                    <h3 class="module-title">확률 보기</h3>
+                    <p class="module-desc">드로우 · 소환 · 융합 풀의 아이템과 확률</p>
+                    <span class="module-tag mono">
+                        Rates
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M2 8h11M9 4l4 4-4 4"/>
+                        </svg>
+                    </span>
+                </a>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/gacha/main.js"></script>
 </body>

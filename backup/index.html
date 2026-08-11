@@ -10,35 +10,65 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
     <meta property="og:title" content="DMOKit - 데이터 백업 / 복원">
     <meta property="og:description" content="모든 도구의 저장 데이터를 코드로 내보내고 불러옵니다.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>데이터 백업 / 복원</h2>
-            <p class="subtitle">링크 · QR로 내보내기 / 가져오기</p>
-        </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    <div class="bg-grid" aria-hidden="true"></div>
 
-    <div class="card backup-card">
-        <p class="backup-desc">모든 도구의 저장 데이터(테마 · 옵션 · 수집 · 돌파 · 가챠 등)를 <b>공유 링크</b>나 <b>QR</b>로 내보냅니다. 링크를 열거나 QR을 스캔하면 그 기기에서 바로 복원돼요. (링크/코드를 붙여넣어 가져오기도 가능)</p>
-        <div class="backup-actions">
-            <button id="exportBtn" class="calc-btn">📤 내보내기 (링크 복사)</button>
-            <button id="importBtn" class="calc-btn secondary">📥 가져오기</button>
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Backup</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-        <textarea id="backupText" class="backup-text" spellcheck="false"
-            placeholder="여기에 복원 링크가 표시됩니다. 가져오려면 링크(또는 코드)를 붙여넣고 '가져오기'를 누르세요."></textarea>
-        <div id="backupQr" class="backup-qr"></div>
-        <p id="backupMsg" class="backup-msg" role="status"></p>
-    </div>
+    </header>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module 06 / Backup &amp; Restore</p>
+            <h1 class="page-title">데이터 백업 / 복원</h1>
+            <p class="page-sub">링크 · QR로 저장 데이터를 내보내고 가져옵니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="panel backup-card">
+                <p class="panel-desc">모든 도구의 저장 데이터(테마 · 옵션 · 수집 · 돌파 · 가챠 등)를 <b>공유 링크</b>나 <b>QR</b>로 내보냅니다. 링크를 열거나 QR을 스캔하면 그 기기에서 바로 복원됩니다. 링크나 코드를 붙여넣어 가져올 수도 있습니다.</p>
+                <div class="backup-actions">
+                    <button id="exportBtn" class="calc-btn">내보내기 (링크 복사)</button>
+                    <button id="importBtn" class="calc-btn secondary">가져오기</button>
+                </div>
+                <textarea id="backupText" class="backup-text" spellcheck="false"
+                    placeholder="여기에 복원 링크가 표시됩니다. 가져오려면 링크(또는 코드)를 붙여넣고 '가져오기'를 누르세요."></textarea>
+                <div id="backupQr" class="backup-qr"></div>
+                <p id="backupMsg" class="backup-msg" role="status"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script src="../js/vendor/qrcode.js"></script>
     <script type="module" src="../js/backup/main.js"></script>

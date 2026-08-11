@@ -10,34 +10,64 @@
         }
     </script>
     <link rel="icon" type="image/png" href="../img/dmo.png">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
     <meta property="og:title" content="DMO 유니온 수집 효과 계산기">
     <meta property="og:description" content="완료한 유니온 수집 효과를 체크하면 EXP·속성 보너스를 자동 합산해줍니다.">
     <meta property="og:image" content="../img/dmo.png">
 </head>
 <body>
 
-    <div class="header-container">
-        <a href="../" class="home-link" aria-label="메인 메뉴로">← 메인</a>
-        <div class="header-content">
-            <h2>DMO 유니온 수집 효과 계산기</h2>
-            <p class="subtitle">완료한 유니온 수집 효과 체크 → 보너스 합산</p>
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Collection</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
         </div>
-        <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
-    </div>
+    </header>
 
-    <div class="card">
-        <div class="summary-box" id="summary"></div>
-
-        <div class="collection-toolbar">
-            <input type="text" id="search" class="collection-search" placeholder="디지몬 이름 검색">
-            <button type="button" id="resetBtn" class="reset-btn">전체 초기화</button>
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module / Union Collection</p>
+            <h1 class="page-title">유니온 수집 효과 계산기</h1>
+            <p class="page-sub">완료한 유니온 수집 효과를 체크하면 EXP · 속성 보너스를 자동으로 합산합니다.</p>
         </div>
 
-        <div class="collection-grid" id="grid"></div>
-    </div>
+        <div class="views shell">
+            <div class="panel">
+                <div class="summary-box" id="summary"></div>
 
-    <footer class="site-footer">&copy; 2026 오메가몬 서버 우람. All rights reserved.</footer>
+                <div class="collection-toolbar">
+                    <input type="text" id="search" class="collection-search" placeholder="디지몬 이름 검색">
+                    <button type="button" id="resetBtn" class="reset-btn">전체 초기화</button>
+                </div>
+
+                <div class="collection-grid" id="grid"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
 
     <script type="module" src="../js/collection/main.js"></script>
 </body>
