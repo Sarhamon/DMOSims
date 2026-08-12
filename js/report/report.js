@@ -297,8 +297,9 @@ $('#viewDecks').addEventListener('click', (e) => {
     const tr = e.target.closest('.rp-row');
     if (tr) { deckIdx = Number(tr.dataset.deck); writeHash(); }
 });
+/* 덱 인덱스는 모든 디지몬이 공유하므로, 보던 덱을 그대로 두고 디지몬만 갈아끼운다 */
 $('#pickSel').addEventListener('change', (e) => {
-    picked = e.target.value; rows = null; deckIdx = null; writeHash();
+    picked = e.target.value; rows = null; writeHash();
 });
 $('#deckSel').addEventListener('change', (e) => { deckIdx = Number(e.target.value); writeHash(); });
 $('#backBtn').addEventListener('click', () => {
