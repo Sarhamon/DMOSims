@@ -112,6 +112,9 @@
         .rp-detailbar select { flex: 1; min-width: 220px; max-width: 340px; }
         .rp-detailbar .fld { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 220px; }
 
+        /* 덱 정렬 전환 — tool.css 의 선택 칩을 그대로 쓴다 */
+        .deck-sort { margin: -8px 0 22px; }
+
         /* 덱 카드 — .module 을 2열로 깔고 아이콘 자리에 U 수를 넣는다 -------- */
         .deck-grid { grid-template-columns: repeat(2, 1fr); }
         @media (max-width: 700px) {
@@ -290,6 +293,9 @@
             color: var(--ink-faint);
             white-space: nowrap;
         }
+
+        /* 1레벨은 기본으로 찍혀 있어 포인트가 들지 않는다 */
+        .pts-base { color: var(--ink-faint); }
 
         .rp-skill-name { display: flex; align-items: center; gap: 9px; }
         .rp-off td { color: var(--ink-faint); }

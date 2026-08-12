@@ -10,9 +10,10 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const byName = [...digimon].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 const cache = new Map();
 
-let picked = null;   // 디지몬 이름. null 이면 디지몬 목록
-let deckIdx = null;  // decks 의 인덱스. null 이면 덱 목록
-let rows = null;     // 현재 디지몬의 결과 37개 (decks 와 같은 순서)
+let picked = null;      // 디지몬 이름. null 이면 디지몬 목록
+let deckIdx = null;     // decks 의 인덱스. null 이면 덱 목록
+let rows = null;        // 현재 디지몬의 결과 37개 (decks 와 같은 순서)
+let sortMode = 'own';   // 'own' = 이 디지몬 덱 먼저, 'dmg' = 딜량 순
 
 async function load(name) {
     if (!cache.has(name)) {
@@ -22,13 +23,15 @@ async function load(name) {
     return cache.get(name);
 }
 
-/* 보고 있는 디지몬이 들어가는 덱을 위로 올리고, 각 무리 안에서는 총 딜 내림차순.
-   목록과 셀렉트가 같은 순서를 쓴다. */
+/* 덱 정렬. 어느 쪽이든 총 딜 내림차순이 바탕이고,
+   'own' 이면 보고 있는 디지몬이 들어가는 덱을 위로 올린다.
+   목록과 상세 셀렉트가 같은 순서를 쓴다. */
 function deckOrder() {
     const has = (deck) => (deck.members.includes(picked) ? 0 : 1);
-    return decks
-        .map((deck, i) => ({ deck, i, r: rows[i] }))
-        .sort((a, b) => has(a.deck) - has(b.deck) || b.r.total - a.r.total);
+    const rank = sortMode === 'own'
+        ? (a, b) => has(a.deck) - has(b.deck) || b.r.total - a.r.total
+        : (a, b) => b.r.total - a.r.total;
+    return decks.map((deck, i) => ({ deck, i, r: rows[i] })).sort(rank);
 }
 
 function chip(slot, t) {
@@ -106,6 +109,7 @@ function digimonHead(sub) {
 /* ---------- 2단계 · 덱 목록 -------------------------------------------- */
 function renderDecks() {
     const order = deckOrder();
+    const own = decks.filter((d) => d.members.includes(picked)).length;
 
     $('#viewDecks').innerHTML = `
         ${digimonHead(`Decks 01 / ${decks.length}`)}
@@ -113,7 +117,17 @@ function renderDecks() {
         <div class="section-head mono">
             <h2>Deck</h2>
             <span class="rule"></span>
-            <span class="count">Total Damage</span>
+            <span class="count">${own} / ${decks.length}</span>
+        </div>
+        <div class="journal-radios deck-sort">
+            <label class="radio-option">
+                <span class="label-text">딜량 순</span>
+                <input type="radio" name="deckSort" value="dmg"${sortMode === 'dmg' ? ' checked' : ''}>
+            </label>
+            <label class="radio-option">
+                <span class="label-text">디지몬 포함</span>
+                <input type="radio" name="deckSort" value="own"${sortMode === 'own' ? ' checked' : ''}>
+            </label>
         </div>
         <div class="module-grid deck-grid">${order.map(({ deck, i }) => `
             <button type="button" class="module deck-mod" data-deck="${i}">
@@ -133,12 +147,12 @@ function skillTable(r) {
         <tr class="rp-off">
             <td class="col-name"><span class="rp-skill-name">${chip(s.slot)}${esc(s.name)}</span></td>
             <td>Lv.${s.lv}</td>
-            <td colspan="4">투자 X &middot; 딜사이클 제외</td>
+            <td colspan="4">기본 &middot; 딜사이클 제외</td>
         </tr>` : `
         <tr>
             <td class="col-name"><span class="rp-skill-name">${chip(s.slot)}${esc(s.name)}</span></td>
             <td><b>Lv.${s.lv}</b></td>
-            <td>${s.pts}점</td>
+            <td>${s.pts ? `${s.pts}점` : '<span class="pts-base">기본</span>'}</td>
             <td class="col-num">${n(s.coef)}</td>
             <td class="col-num">${s.hits}회</td>
             <td>
@@ -288,6 +302,10 @@ $('#pickGrid').addEventListener('click', (e) => {
 $('#viewDecks').addEventListener('click', (e) => {
     const btn = e.target.closest('.deck-mod');
     if (btn) { deckIdx = Number(btn.dataset.deck); writeHash(); }
+});
+/* 정렬 칩도 덱 목록을 그릴 때마다 새로 만들어지므로 위임으로 받는다 */
+$('#viewDecks').addEventListener('change', (e) => {
+    if (e.target.name === 'deckSort') { sortMode = e.target.value; renderDecks(); }
 });
 /* 덱 인덱스는 모든 디지몬이 공유하므로, 보던 덱을 그대로 두고 디지몬만 갈아끼운다 */
 $('#pickSel').addEventListener('change', (e) => {
