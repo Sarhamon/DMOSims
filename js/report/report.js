@@ -1,4 +1,4 @@
-import { meta, decks, digimon, missing } from './reportMeta.js';
+import { meta, decks, digimon } from './reportMeta.js';
 
 /* 디지몬 → 덱 → 결과 3단계.
    결과 데이터는 디지몬을 고른 시점에 data/dNN.js 를 동적으로 불러온다. */
@@ -22,11 +22,13 @@ async function load(name) {
     return cache.get(name);
 }
 
-/* 총 딜 내림차순으로 본 덱 순서 — 목록 표와 셀렉트가 같이 쓴다 */
+/* 보고 있는 디지몬이 들어가는 덱을 위로 올리고, 각 무리 안에서는 총 딜 내림차순.
+   목록과 셀렉트가 같은 순서를 쓴다. */
 function deckOrder() {
+    const has = (deck) => (deck.members.includes(picked) ? 0 : 1);
     return decks
         .map((deck, i) => ({ deck, i, r: rows[i] }))
-        .sort((a, b) => b.r.total - a.r.total);
+        .sort((a, b) => has(a.deck) - has(b.deck) || b.r.total - a.r.total);
 }
 
 function chip(slot, t) {
@@ -40,7 +42,24 @@ const effChips = (deck) => deck.effects
     .map(([cond, eff]) => `<span class="eff-chip"><b>${esc(eff)}</b>${cond === '상시' ? '' : `<i>${esc(cond)}</i>`}</span>`)
     .join('');
 
-const deckMult = (deck) => `배수 x${deck.mult.toFixed(2)}${deck.atk ? ` · 공격력 +${deck.atk}%` : ''}`;
+/* 덱을 채우는 디지몬. 보고 있는 디지몬은 강조한다.
+   아직 안 채운 덱은 덱 종류를 대신 보여준다.
+   이름 하나를 .mem 으로 묶어 nowrap 을 걸고 사이를 공백으로 이으면,
+   줄은 이름 사이에서만 바뀌고 이름 가운데서는 끊기지 않는다. */
+const deckSub = (deck) => deck.members.length
+    ? deck.members
+        .map((m, i, arr) => `<span class="mem">`
+            + `<span class="nm${m === picked ? ' on' : ''}">${esc(m)}</span>`
+            + `${i < arr.length - 1 ? '<i class="sep">·</i>' : ''}</span>`)
+        .join(' ')
+    : esc(deck.type);
+
+/* 쉼표가 있는 이름은 조각마다 nowrap 을 걸어 쉼표에서만 줄이 바뀌게 한다.
+   쉼표가 없는 이름은 nowrap 을 걸면 카드 밖으로 넘치므로 그대로 둔다. */
+const deckTitle = (name) => name.includes(',')
+    ? name.split(',').map((part, i, arr) =>
+        `<span class="nw">${esc(part.trim())}${i < arr.length - 1 ? ',' : ''}</span>`).join(' ')
+    : esc(name);
 
 const BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 2.6 5.6 13.4h5.1L10.6 21.4 18.4 10.6h-5.1Z"/></svg>`;
 
@@ -51,9 +70,6 @@ function renderStatic() {
     $('#metaCount').innerHTML = `${digimon.length}<span class="u">마리</span>`;
     $('#metaDecks').innerHTML = `${decks.length}<span class="u">개</span>`;
 
-    $('#missingCount').textContent = `${missing.length}마리`;
-    $('#missingList').innerHTML = missing
-        .map((m) => `<li>${esc(m.name)}<span class="why">${esc(m.reason)}</span></li>`).join('');
     $('#listCount').textContent = `${digimon.length} Available`;
 
     $('#pickSel').innerHTML = byName
@@ -90,7 +106,6 @@ function digimonHead(sub) {
 /* ---------- 2단계 · 덱 목록 -------------------------------------------- */
 function renderDecks() {
     const order = deckOrder();
-    const max = order[0].r.total;
 
     $('#viewDecks').innerHTML = `
         ${digimonHead(`Decks 01 / ${decks.length}`)}
@@ -100,37 +115,15 @@ function renderDecks() {
             <span class="rule"></span>
             <span class="count">Total Damage</span>
         </div>
-        <div class="panel panel--flush">
-            <div class="table-container">
-                <table class="rp-t rp-deck-t">
-                    <thead>
-                        <tr>
-                            <th class="rp-rank">순위</th>
-                            <th style="text-align:left">덱</th>
-                            <th>총 딜</th>
-                            <th>DPS</th>
-                            <th>시전 점유율</th>
-                        </tr>
-                    </thead>
-                    <tbody>${order.map(({ deck, i, r }, k) => `
-                        <tr class="rp-row ${k === 0 ? 'rank-1' : ''}" data-deck="${i}">
-                            <td class="rp-rank">${k + 1}</td>
-                            <td class="col-name">
-                                <b class="deck-name">${esc(deck.name)}</b>
-                                <span class="deck-meta mono">${esc(deck.type)} · ${deckMult(deck)}</span>
-                                <span class="deck-effs">${effChips(deck)}</span>
-                            </td>
-                            <td class="col-num">
-                                <b>${n(r.total)}</b>
-                                <span class="rp-track"><span class="rp-fill" style="width:${(r.total / max * 100).toFixed(1)}%"></span></span>
-                            </td>
-                            <td class="col-num">${n(r.dps)}</td>
-                            <td>${r.uptime.toFixed(1)}%</td>
-                        </tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>
-            <p class="table-hint mono">← 좌우로 스크롤 →</p>
+        <div class="module-grid deck-grid">${order.map(({ deck, i }) => `
+            <button type="button" class="module deck-mod" data-deck="${i}">
+                <span class="deck-head">
+                    <span class="module-icon u-badge mono">${deck.u}U</span>
+                    <h3 class="module-title">${deckTitle(deck.name)}</h3>
+                </span>
+                <p class="module-desc deck-meta mono">${deckSub(deck)}</p>
+                <div class="deck-effs">${effChips(deck)}</div>
+            </button>`).join('')}
         </div>`;
 }
 
@@ -206,7 +199,11 @@ function renderDetail() {
 
         <div class="panel rp-block deck-card">
             <h3 class="section-title">${esc(deck.name)} <span class="hint">${esc(deck.type)}</span></h3>
-            <p class="deck-meta mono">${deckMult(deck)}</p>
+            <label class="field-label mono" for="deckSel">덱 바꾸기</label>
+            <select id="deckSel" aria-label="덱 선택">${order
+                .map(({ deck: d, i }) => `<option value="${i}"${i === deckIdx ? ' selected' : ''}>${d.u}U · ${esc(d.name)}</option>`)
+                .join('')}</select>
+            ${deck.atk ? `<p class="deck-meta mono">공격력 +${deck.atk}%</p>` : ''}
             <div class="deck-effs">${effChips(deck)}</div>
             <dl class="hero-stats">
                 <div><dt class="mono">총 딜</dt><dd>${n(r.total)}</dd></div>
@@ -238,10 +235,6 @@ function renderDetail() {
             <h3 class="section-title">대안 빌드 <span class="hint">1위 대비 · 상위 ${r.builds.length}개</span></h3>
             ${buildTable(r)}
         </div>`;
-
-    $('#deckSel').innerHTML = order
-        .map(({ deck: d, i }, k) => `<option value="${i}">${k + 1}위 · ${esc(d.name)}</option>`).join('');
-    $('#deckSel').value = deckIdx;
 }
 
 /* ---------- 화면 전환 --------------------------------------------------- */
@@ -255,7 +248,6 @@ async function render() {
     $('#viewDecks').hidden = list || detail;
     $('#viewDetail').hidden = !detail;
     $('#detailBar').hidden = list;
-    $('#deckField').hidden = !detail;
 
     if (list) {
         $('#crumb').textContent = 'Report';
@@ -294,14 +286,17 @@ $('#pickGrid').addEventListener('click', (e) => {
     if (btn) { picked = btn.dataset.name; rows = null; deckIdx = null; writeHash(); }
 });
 $('#viewDecks').addEventListener('click', (e) => {
-    const tr = e.target.closest('.rp-row');
-    if (tr) { deckIdx = Number(tr.dataset.deck); writeHash(); }
+    const btn = e.target.closest('.deck-mod');
+    if (btn) { deckIdx = Number(btn.dataset.deck); writeHash(); }
 });
 /* 덱 인덱스는 모든 디지몬이 공유하므로, 보던 덱을 그대로 두고 디지몬만 갈아끼운다 */
 $('#pickSel').addEventListener('change', (e) => {
     picked = e.target.value; rows = null; writeHash();
 });
-$('#deckSel').addEventListener('change', (e) => { deckIdx = Number(e.target.value); writeHash(); });
+/* 덱 셀렉트는 상세를 그릴 때마다 새로 만들어지므로 바깥에서 위임으로 받는다 */
+$('#viewDetail').addEventListener('change', (e) => {
+    if (e.target.id === 'deckSel') { deckIdx = Number(e.target.value); writeHash(); }
+});
 $('#backBtn').addEventListener('click', () => {
     if (deckIdx !== null) deckIdx = null;
     else { picked = null; rows = null; }

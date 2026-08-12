@@ -18,16 +18,6 @@ SRC = HERE.parent / "report" / "source"
 OUT_META = HERE.parent / "js" / "report" / "reportMeta.js"
 OUT_DATA = HERE.parent / "js" / "report" / "data"
 
-# 소스에 없는 값. 데이터가 모자라 시뮬레이션에서 뺀 디지몬 — 손으로 관리한다.
-MISSING = [
-    {"name": "홀리드라몬 각성", "reason": "모션 4개 미상"},
-    {"name": "리리스몬 X 각성", "reason": "모션 5개 미상"},
-    {"name": "퀀텀몬", "reason": "모션 5개, 광역 5개, 계수 5개 미상"},
-    {"name": "아폴로몬", "reason": "모션 5개, 광역 5개, 계수 5개 미상"},
-    {"name": "던데블몬", "reason": "모션 4개 미상"},
-    {"name": "아바도몬 코어", "reason": "모션 5개 미상"},
-]
-
 HEAD_RE = re.compile(r'^전투 (\d+)초 .*?스킬포인트 (\d+)점')
 DECK_RE = re.compile(r'^\[덱 (\d+)/(\d+)\] (.+?) \((.+?)\)\s+배수 x([\d.]+), 공격력 \+(\d+)%')
 SP_RE = re.compile(r'\[ 스킬포인트 투자 추천 \]\s+(\d+) / (\d+) 점 사용')
@@ -38,6 +28,7 @@ SELF_RE = re.compile(r'자버프 적용 (\d+)/(\d+)회')
 PRIO_RE = re.compile(r'^\s*\d+\. (\d)스 (.+?)\s{2,}([\d,]+)/초\s+쿨 (\d+)초\s+시전 ([\d.]+)초(.*)$')
 BUILD_RE = re.compile(r'^\s*(\d+)위\s+(.+?)\s{2,}([\d,]+)\s+([+-][\d.]+)%')
 OPEN_RE = re.compile(r'(\d)스\(([\d.]+)\)')
+U_RE = re.compile(r'(\d+)U')
 
 num = lambda s: int(s.replace(',', ''))
 errors = []
@@ -53,6 +44,22 @@ def parse_decks_csv():
             effects = [[r[i].strip(), r[i + 1].strip()]
                        for i in (1, 3, 5, 7) if r[i].strip() not in ("-", "")]
             rows[(r[9].strip(), r[0].strip())] = effects
+    return rows
+
+
+def parse_members_csv():
+    """덱을 채우는 디지몬. 손으로 채워 넣는 파일이라 아직 빈 칸이 있을 수 있다."""
+    rows = {}
+    path = SRC / "deck_members.csv"
+    if not path.exists():
+        errors.append(f"{path.name} 이 없음")
+        return rows
+    with path.open(encoding="utf-8-sig", newline="") as f:
+        for r in csv.reader(f):
+            if not r or r[0] == "덱 종류":
+                continue
+            # 디지몬 이름에 쉼표가 들어가므로 / 로 나눈다
+            rows[(r[1].strip(), r[0].strip())] = [x.strip() for x in r[2].split("/") if x.strip()]
     return rows
 
 
@@ -153,9 +160,21 @@ def main():
         if k not in csv_effects:
             errors.append(f"deck.csv 에 없는 덱: {k[0]} ({k[1]})")
 
-    decks = [{"name": b["deck"], "type": b["type"], "mult": b["mult"], "atk": b["atk"],
-              "effects": csv_effects.get((b["deck"], b["type"]), [])}
-             for b in reports[0]["blocks"]]
+    csv_members = parse_members_csv()
+    for k in csv_members:
+        if k not in deck_key:
+            errors.append(f"deck_members.csv 의 덱을 리포트에서 못 찾음: {k[0]} ({k[1]})")
+
+    # 덱 종류에 박힌 U 수 — "머시풀 1U 파피몬쪽" 처럼 끝이 아닌 자리에 오기도 한다
+    decks = []
+    for b in reports[0]["blocks"]:
+        m = U_RE.search(b["type"])
+        if not m:
+            errors.append(f"덱 종류에서 U 수를 못 읽음: {b['type']}")
+        decks.append({"name": b["deck"], "type": b["type"], "u": int(m.group(1)) if m else 0,
+                      "mult": b["mult"], "atk": b["atk"],
+                      "effects": csv_effects.get((b["deck"], b["type"]), []),
+                      "members": csv_members.get((b["deck"], b["type"]), [])})
 
     digimon = [{"name": r["name"], "file": f"d{i:02d}", "notes": r["notes"]}
                for i, r in enumerate(reports, 1)]
@@ -173,8 +192,7 @@ def main():
         + "// 덱 순서는 모든 디지몬이 동일하다. data/dNN.js 의 결과 배열도 이 순서를 따른다.\n\n"
         + f"export const meta = {dump({'duration': reports[0]['duration'], 'spTotal': reports[0]['spTotal']})};\n\n"
         + f"export const decks = {dump(decks)};\n\n"
-        + f"export const digimon = {dump(digimon)};\n\n"
-        + f"export const missing = {dump(MISSING)};\n",
+        + f"export const digimon = {dump(digimon)};\n",
         encoding="utf-8")
 
     for d, r in zip(digimon, reports):

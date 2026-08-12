@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="../css/home.css">
     <link rel="stylesheet" href="../css/tool.css">
     <meta property="og:title" content="DMO U등급 딜사이클 리포트">
-    <meta property="og:description" content="U등급 디지몬 15종 × 덱 37종의 300초 딜사이클 · 스킬포인트 배분 · 대안 빌드 비교">
+    <meta property="og:description" content="U등급 디지몬 × 덱 37종의 300초 딜사이클 · 스킬포인트 배분 · 대안 빌드 비교">
     <meta property="og:image" content="../img/dmo.png">
     <style>
         /* ==================================================================
@@ -112,9 +112,41 @@
         .rp-detailbar select { flex: 1; min-width: 220px; max-width: 340px; }
         .rp-detailbar .fld { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 220px; }
 
-        /* 덱 ------------------------------------------------------------- */
-        .rp-deck-t { min-width: 760px; }
-        .deck-name { display: block; font-weight: 700; letter-spacing: -0.02em; }
+        /* 덱 카드 — .module 을 2열로 깔고 아이콘 자리에 U 수를 넣는다 -------- */
+        .deck-grid { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 700px) {
+            .deck-grid { grid-template-columns: 1fr; }
+        }
+        .u-badge {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            letter-spacing: 0;
+            color: var(--accent-ink);
+        }
+        /* U 배지와 덱 이름을 한 줄에 세운다 */
+        .deck-head { display: flex; align-items: center; gap: 14px; }
+        .deck-head .module-icon { flex-shrink: 0; margin-bottom: 0; }
+        .deck-head .module-title { margin: 0; }
+        /* 쉼표로 끊은 조각. 조각 안에서는 줄이 바뀌지 않는다 */
+        .module-title .nw { white-space: nowrap; }
+
+        .deck-mod .module-desc { margin-top: 14px; }
+        .deck-mod .deck-effs { margin-top: auto; padding-top: 14px; }
+
+        /* 덱을 채우는 디지몬 — 이름 하나가 통째로 붙어 다닌다 */
+        .deck-meta { line-height: 1.9; }
+        .deck-meta .mem { white-space: nowrap; }
+        .deck-meta .sep { font-style: normal; margin: 0 5px; opacity: 0.55; }
+        /* 보고 있는 디지몬만 또렷하게 */
+        .deck-meta .nm.on {
+            font-weight: 600;
+            color: var(--accent-ink);
+            background: var(--accent-wash);
+            padding: 1px 5px;
+            margin: 0 -1px;
+            border-radius: 2px;
+        }
+
         .deck-meta {
             display: block;
             margin-top: 3px;
@@ -122,7 +154,7 @@
             letter-spacing: 0.02em;
             color: var(--ink-faint);
         }
-        .deck-effs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+        .deck-effs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
         .eff-chip {
             display: inline-flex;
             align-items: baseline;
@@ -142,7 +174,10 @@
             font-size: 0.6875rem;
             color: var(--ink-faint);
         }
-        .deck-card .deck-meta { margin: 10px 0 0; font-size: 0.75rem; }
+        /* 덱 전환은 상단바가 아니라 이 카드 안에서 한다 — 모바일 오터치를 줄인다 */
+        .deck-card .field-label { margin: 18px 0 8px; }
+        .deck-card select { width: 100%; max-width: 420px; }
+        .deck-card .deck-meta { margin: 16px 0 0; font-size: 0.75rem; }
         .deck-card .hero-stats { margin-top: 22px; }
 
         .dg-head { margin-bottom: 30px; }
@@ -189,33 +224,6 @@
         }
         .rank-1 .rp-fill { opacity: 1; }
         .rp-share { display: flex; flex-direction: column; gap: 1px; min-width: 84px; }
-
-        /* 순위표 행을 눌러도 상세로 들어간다 */
-        tr.rp-row { cursor: pointer; }
-        tr.rp-row:hover td { background: var(--accent-wash); }
-        tr.rp-row:hover .col-name { color: var(--accent-ink); }
-
-        /* 데이터 부족 안내 ------------------------------------------------- */
-        ul.rp-missing { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-        .rp-missing li {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            padding: 7px 12px;
-            border: 1px dashed var(--line-strong);
-            border-radius: 3px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            color: var(--ink-dim);
-        }
-        .rp-missing .why {
-            font-family: var(--mono);
-            font-size: 0.6875rem;
-            font-weight: 400;
-            letter-spacing: 0.02em;
-            color: var(--amber);
-        }
 
         /* 상세 블록 ------------------------------------------------------- */
         .rp-block + .rp-block { margin-top: 26px; }
@@ -291,6 +299,9 @@
             .rp-prio li { flex-wrap: wrap; gap: 8px 12px; }
             .rp-prio .p-cd { flex-basis: 100%; padding-left: 46px; }
             .rp-detailbar select { max-width: none; }
+            /* 뒤로 버튼과 셀렉트가 나란히 붙지 않도록 줄을 갈라 놓는다 */
+            .rp-detailbar .fld { flex: 1 0 100%; }
+            .rp-back { height: 44px; }
         }
     </style>
 </head>
@@ -322,7 +333,8 @@
         <div class="page-head shell">
             <p class="eyebrow mono">Report / U-Tier Deal Cycle</p>
             <h1 class="page-title">U등급 딜사이클 리포트</h1>
-            <p class="page-sub">디지몬과 덱을 고르면 그 조합의 300초 딜사이클을 보여줍니다. 스킬포인트 배분과 사용 순서, 대안 빌드까지 정리했습니다.</p>
+            <p class="page-sub">디지몬과 덱을 고르면 그 조합의 300초 딜사이클을 보여줍니다.</p>
+            <p class="page-sub">스킬포인트 배분과 사용 순서, 대안 빌드까지 정리했습니다.</p>
             <dl class="hero-stats">
                 <div>
                     <dt class="mono">Duration</dt>
@@ -356,13 +368,9 @@
                     <label class="field-label mono" for="pickSel" style="margin:0">디지몬</label>
                     <select id="pickSel" aria-label="디지몬 선택"></select>
                 </span>
-                <span class="fld" id="deckField" hidden>
-                    <label class="field-label mono" for="deckSel" style="margin:0">덱</label>
-                    <select id="deckSel" aria-label="덱 선택"></select>
-                </span>
             </div>
 
-            <p class="rp-mode-note"><b>기본 광역기는 딜사이클에서 제외</b>했습니다. 던전에서 실제로 쓰는 극딜 광역기(둠, 올 딜리트)만 항상 사용하는 기준입니다.</p>
+            <p class="rp-mode-note"><b>기본 광역기는 딜사이클에서 제외</b></p>
 
             <!-- 목록 ------------------------------------------------------ -->
             <section id="viewList">
@@ -372,11 +380,6 @@
                     <span class="count" id="listCount"></span>
                 </div>
                 <div class="module-grid" id="pickGrid"></div>
-
-                <div class="panel" style="margin-top:44px">
-                    <h3 class="section-title">데이터가 모자라 제외한 디지몬 <span class="result-count" id="missingCount"></span></h3>
-                    <ul class="rp-missing" id="missingList"></ul>
-                </div>
             </section>
 
             <!-- 덱 목록 ---------------------------------------------------- -->
