@@ -2,8 +2,9 @@
 // 각 아이템: { probability, name, grade, category } (category: 'evolution' | 'other')
 // pity.every 회마다 pity.reward를 고정 보장으로 추가 지급.
 
-// 천장 횟수별 소환 등급 라벨 (50: 스페셜, 100: 일반, 150: 프리미엄)
+// 천장 횟수별 소환 등급 라벨 (30: 레전드, 50: 스페셜, 100: 일반, 150: 프리미엄)
 export function tierLabel(every) {
+    if (every === 30) return '레전드 데이터 소환';
     if (every === 50) return '스페셜 데이터 소환';
     if (every === 100) return '일반 데이터 소환';
     if (every === 150) return '프리미엄 데이터 소환';
@@ -401,5 +402,30 @@ export const summons = [
             { probability: 25.00, name: "스페셜 치킨 콤보 200개", grade: "A+", category: "other" },
         ],
     },
+    {
+        id: "legend-ultimatedata",
+        name: "궁극 디지털 데이터",
+        pity: {
+            every: 30,
+            reward: { name: "궁극 디지털 데이터 [지급용]", grade: "U", category: "other" },
+        },
+        items: [
+            { probability: 0.10, name: "궁극 디지털 데이터 [지급용]", grade: "U", category: "other" },
+            { probability: 0.50, name: "놀라운 힘의 응축체[SSS+]", grade: "SSS+", category: "evolution" },
+            { probability: 1.00, name: "힘의 응축체[SSS]", grade: "SSS", category: "evolution" },
+            { probability: 1.00, name: "궁극 강화 디지클론 세트 상자", grade: "SSS", category: "other" },
+            { probability: 1.20, name: "옵션 변경 재봉틀 5개", grade: "SSS", category: "other" },
+            { probability: 1.20, name: "수치 변경 재봉틀 5개", grade: "SSS", category: "other" },
+            { probability: 1.50, name: "고급 디지터리 파워 결정체 5개", grade: "SSS", category: "other" },
+            { probability: 1.50, name: "돌파 옵션 주사위 2개", grade: "SS", category: "other" },
+            { probability: 2.00, name: "디지털 에너지 드링크", grade: "SS", category: "other" },
+            { probability: 5.00, name: "호메오스타시스의 열매 40개", grade: "SS", category: "other" },
+            { probability: 5.00, name: "옵션 변경 스톤 40개", grade: "S+", category: "other" },
+            { probability: 5.00, name: "수치 변경 스톤 40개", grade: "S+", category: "other" },
+            { probability: 15.00, name: "맛있는 백금바나나 100개", grade: "S", category: "other" },
+            { probability: 15.00, name: "JMT 백금바나나 100개", grade: "S", category: "other" },
+            { probability: 20.00, name: "백금 바나나 200개", grade: "A+", category: "other" },
+            { probability: 25.00, name: "스페셜 치킨 콤보 200개", grade: "A+", category: "other" },
+        ],
+    },
 ];
- 

@@ -49,7 +49,7 @@ function pullOne(items) {
 function populatePicker() {
     const picker = document.getElementById('summonPicker');
     const activeSection = document.getElementById('summonActiveSection');
-    const columns = [50, 100, 150];
+    const columns = [50, 100, 150, 30];
     picker.innerHTML = columns.map(every => {
         const buttons = summons
             .map((s, i) => ({ s, i }))
