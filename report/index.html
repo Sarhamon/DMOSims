@@ -112,6 +112,16 @@
         .rp-detailbar select { flex: 1; min-width: 220px; max-width: 340px; }
         .rp-detailbar .fld { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 220px; }
 
+        /* 전투 시간 전환 — 덱 정렬과 같은 선택 칩 */
+        .rp-durpick {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin: 0 0 22px;
+        }
+        .rp-durpick .field-label { margin: 0; }
+
         /* 덱 정렬 전환 — tool.css 의 선택 칩을 그대로 쓴다 */
         .deck-sort { margin: -8px 0 22px; }
 
@@ -339,7 +349,7 @@
         <div class="page-head shell">
             <p class="eyebrow mono">Report / U-Tier Deal Cycle</p>
             <h1 class="page-title">U등급 딜사이클 리포트</h1>
-            <p class="page-sub">디지몬과 덱을 고르면 그 조합의 300초 딜사이클을 보여줍니다.</p>
+            <p class="page-sub">디지몬과 덱을 고르면 그 조합의 딜사이클을 전투 시간 5 · 10 · 15분 기준으로 보여줍니다.</p>
             <p class="page-sub">스킬포인트 배분과 사용 순서, 대안 빌드까지 정리했습니다.</p>
             <dl class="hero-stats">
                 <div>
@@ -374,6 +384,11 @@
                     <label class="field-label mono" for="pickSel" style="margin:0">디지몬</label>
                     <select id="pickSel" aria-label="디지몬 선택"></select>
                 </span>
+            </div>
+
+            <div class="rp-durpick">
+                <span class="field-label mono">전투 시간</span>
+                <div class="journal-radios" id="durPick"></div>
             </div>
 
             <p class="rp-mode-note"><b>기본 광역기는 딜사이클에서 제외</b></p>

@@ -1,7 +1,7 @@
 import { meta, decks, digimon } from './reportMeta.js';
 
 /* 디지몬 → 덱 → 결과 3단계.
-   결과 데이터는 디지몬을 고른 시점에 data/dNN.js 를 동적으로 불러온다. */
+   결과 데이터는 디지몬·전투 시간을 고른 시점에 data/dNN-M.js 를 동적으로 불러온다. */
 
 const $ = (s) => document.querySelector(s);
 const n = (v) => v.toLocaleString('ko-KR');
@@ -14,13 +14,15 @@ let picked = null;      // 디지몬 이름. null 이면 디지몬 목록
 let deckIdx = null;     // decks 의 인덱스. null 이면 덱 목록
 let rows = null;        // 현재 디지몬의 결과 37개 (decks 와 같은 순서)
 let sortMode = 'own';   // 'own' = 이 디지몬 덱 먼저, 'dmg' = 딜량 순
+let dur = meta.durations[0];  // 전투 시간(초)
 
 async function load(name) {
-    if (!cache.has(name)) {
+    const key = `${name}/${dur}`;
+    if (!cache.has(key)) {
         const file = digimon.find((d) => d.name === name).file;
-        cache.set(name, (await import(`./data/${file}.js`)).default);
+        cache.set(key, (await import(`./data/${file}-${dur / 60}.js`)).default);
     }
-    return cache.get(name);
+    return cache.get(key);
 }
 
 /* 덱 정렬. 어느 쪽이든 총 딜 내림차순이 바탕이고,
@@ -68,12 +70,17 @@ const BOLT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
 
 /* ---------- 고정 영역 ------------------------------------------------- */
 function renderStatic() {
-    $('#metaDuration').innerHTML = `${meta.duration}<span class="u">초</span>`;
     $('#metaSp').innerHTML = `${meta.spTotal}<span class="u">점</span>`;
     $('#metaCount').innerHTML = `${digimon.length}<span class="u">마리</span>`;
     $('#metaDecks').innerHTML = `${decks.length}<span class="u">개</span>`;
 
     $('#listCount').textContent = `${digimon.length} Available`;
+
+    $('#durPick').innerHTML = meta.durations.map((d) => `
+        <label class="radio-option">
+            <span class="label-text">${d / 60}분</span>
+            <input type="radio" name="dur" value="${d}">
+        </label>`).join('');
 
     $('#pickSel').innerHTML = byName
         .map((d) => `<option value="${esc(d.name)}">${esc(d.name)}</option>`).join('');
@@ -255,6 +262,9 @@ function renderDetail() {
 async function render() {
     if (picked !== null && rows === null) rows = await load(picked);
 
+    $(`#durPick input[value="${dur}"]`).checked = true;
+    $('#metaDuration').innerHTML = `${dur}<span class="u">초</span>`;
+
     const list = picked === null;
     const detail = !list && deckIdx !== null;
 
@@ -274,8 +284,13 @@ async function render() {
 
 /* 주소 해시로 상태를 남겨 새로고침 / 뒤로가기를 지원한다 */
 function writeHash() {
-    const q = picked === null ? ''
-        : `#d=${encodeURIComponent(picked)}${deckIdx === null ? '' : `&k=${deckIdx}`}`;
+    /* 전투 시간은 기본값이 아닐 때만 남긴다 */
+    const parts = [
+        picked === null ? '' : `d=${encodeURIComponent(picked)}`,
+        picked !== null && deckIdx !== null ? `k=${deckIdx}` : '',
+        dur === meta.durations[0] ? '' : `t=${dur}`,
+    ].filter(Boolean);
+    const q = parts.length ? `#${parts.join('&')}` : '';
     if (location.hash !== q) location.hash = q;
     else readHash();
 }
@@ -286,6 +301,10 @@ function readHash() {
     const next = d && digimon.some((x) => x.name === d) ? d : null;
 
     if (next !== picked) { picked = next; rows = null; }
+
+    const t = Number(p.get('t'));
+    const nextDur = meta.durations.includes(t) ? t : meta.durations[0];
+    if (nextDur !== dur) { dur = nextDur; rows = null; }
 
     const k = Number(p.get('k'));
     deckIdx = picked !== null && p.has('k') && Number.isInteger(k) && decks[k] ? k : null;
@@ -314,6 +333,9 @@ $('#pickSel').addEventListener('change', (e) => {
 /* 덱 셀렉트는 상세를 그릴 때마다 새로 만들어지므로 바깥에서 위임으로 받는다 */
 $('#viewDetail').addEventListener('change', (e) => {
     if (e.target.id === 'deckSel') { deckIdx = Number(e.target.value); writeHash(); }
+});
+$('#durPick').addEventListener('change', (e) => {
+    if (e.target.name === 'dur') { dur = Number(e.target.value); rows = null; writeHash(); }
 });
 $('#backBtn').addEventListener('click', () => {
     if (deckIdx !== null) deckIdx = null;

@@ -1,11 +1,12 @@
 """
-Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/data/dNN.js
+Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/data/dNN-M.js
 
-리포트 1개 = 디지몬 1마리, 그 안에 덱 37개 블록이 들어 있다.
+리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(5/10/15분), 그 안에 덱 37개 블록이 들어 있다.
 덱 순서는 모든 리포트가 동일하므로 덱 목록은 reportMeta.js 에 한 번만 담고,
-디지몬별 결과 37개는 data/dNN.js 로 쪼개 화면에서 그때그때 불러 쓴다.
+디지몬·구간별 결과 37개는 data/dNN-M.js 로 쪼개 화면에서 그때그때 불러 쓴다.
 
 파일명을 dNN 으로 두는 이유: 디지몬 이름에 콜론(라스트 에볼루션: 인연)이 들어가 파일명으로 못 쓴다.
+뒤의 M 은 전투 시간(분)이다.
 """
 import csv
 import json
@@ -19,7 +20,7 @@ OUT_META = HERE.parent / "js" / "report" / "reportMeta.js"
 OUT_DATA = HERE.parent / "js" / "report" / "data"
 
 HEAD_RE = re.compile(r'^전투 (\d+)초 .*?스킬포인트 (\d+)점')
-DECK_RE = re.compile(r'^\[덱 (\d+)/(\d+)\] (.+?) \((.+?)\)\s+배수 x([\d.]+), 공격력 \+(\d+)%')
+DECK_RE = re.compile(r'^\[덱 (\d+)/(\d+)\] (.+?) \((.+?)\)\s+스뎀 \+(\d+)% \(자버프와 합연산\), 최종 x([\d.]+), 공격력 \+(\d+)%')
 SP_RE = re.compile(r'\[ 스킬포인트 투자 추천 \]\s+(\d+) / (\d+) 점 사용')
 SKILL_RE = re.compile(r'^\s*(\d)스 (.+?)\s+Lv\.(\d+)\s+(\d+)점\s+계수\s+([\d,]+)\s+(\d+)회\s+딜지분\s+([\d.]+)%')
 SKILL_OFF_RE = re.compile(r'^\s*(\d)스 (.+?)\s+Lv\.(\d+)\s+투자 X')
@@ -83,7 +84,7 @@ def parse_report(path):
         m = DECK_RE.match(l)
         if m:
             cur = {"deck": m.group(3), "type": m.group(4),
-                   "mult": float(m.group(5)), "atk": int(m.group(6)),
+                   "sdem": int(m.group(5)), "fin": float(m.group(6)), "atk": int(m.group(7)),
                    "skills": [], "opening": [], "steady": [], "priority": [], "builds": []}
             blocks.append(cur)
             continue
@@ -135,10 +136,29 @@ def main():
     if not reports:
         sys.exit("리포트를 못 찾음")
 
-    durations = {r["duration"] for r in reports}
     sp_totals = {r["spTotal"] for r in reports}
-    if len(durations) > 1 or len(sp_totals) > 1:
-        errors.append(f"리포트마다 기준이 다름: 전투 {durations}, 스킬포인트 {sp_totals}")
+    if len(sp_totals) > 1:
+        errors.append(f"리포트마다 스킬포인트가 다름: {sp_totals}")
+
+    # 리포트 1개 = 디지몬 1마리 × 전투 시간 1구간. 모든 디지몬이 모든 구간을 갖춰야 한다.
+    durations = sorted({r["duration"] for r in reports})
+    for d in durations:
+        if d % 60:
+            errors.append(f"전투 시간이 분 단위로 안 떨어짐: {d}초")
+    names = list(dict.fromkeys(r["name"] for r in reports))
+    by_pair = {}
+    for r in reports:
+        if (r["name"], r["duration"]) in by_pair:
+            errors.append(f"{r['name']} {r['duration']}초: 리포트가 둘 이상")
+        by_pair[(r["name"], r["duration"])] = r
+    for nm in names:
+        missing = [f"{d}초" for d in durations if (nm, d) not in by_pair]
+        if missing:
+            errors.append(f"{nm}: {', '.join(missing)} 리포트 없음")
+        # 머리말 안내는 구간과 무관하므로 같아야 한다
+        notes = {tuple(by_pair[(nm, d)]["notes"]) for d in durations if (nm, d) in by_pair}
+        if len(notes) > 1:
+            errors.append(f"{nm}: 구간마다 머리말 안내가 다름")
 
     # 덱 집합은 모든 리포트가 같지만 정렬 순서는 리포트마다 다르다.
     # 첫 리포트 순서를 기준으로 삼고, 나머지 리포트의 결과를 그 순서에 맞춰 다시 늘어놓는다.
@@ -151,8 +171,8 @@ def main():
         for k in deck_key:
             b = by_key[k]
             ref = reports[0]["blocks"][deck_key.index(k)]
-            if (b["mult"], b["atk"]) != (ref["mult"], ref["atk"]):
-                errors.append(f"{r['name']} / {k[0]}: 배수·공격력이 첫 리포트와 다름")
+            if (b["sdem"], b["fin"], b["atk"]) != (ref["sdem"], ref["fin"], ref["atk"]):
+                errors.append(f"{r['name']} / {k[0]}: 스뎀·최종·공격력이 첫 리포트와 다름")
         r["blocks"] = [by_key[k] for k in deck_key]
 
     csv_effects = parse_decks_csv()
@@ -172,13 +192,14 @@ def main():
         if not m:
             errors.append(f"덱 종류에서 U 수를 못 읽음: {b['type']}")
         decks.append({"name": b["deck"], "type": b["type"], "u": int(m.group(1)) if m else 0,
-                      "mult": b["mult"], "atk": b["atk"],
+                      "sdem": b["sdem"], "fin": b["fin"], "atk": b["atk"],
                       "effects": csv_effects.get((b["deck"], b["type"]), []),
                       "members": csv_members.get((b["deck"], b["type"]), [])})
 
-    digimon = [{"name": r["name"], "file": f"d{i:02d}", "notes": r["notes"]}
-               for i, r in enumerate(reports, 1)]
-
+    # 머리말 안내는 구간이 달라도 같다(위에서 확인)
+    notes_of = {r["name"]: r["notes"] for r in reports}
+    digimon = [{"name": nm, "file": f"d{i:02d}", "notes": notes_of[nm]}
+               for i, nm in enumerate(names, 1)]
     if errors:
         print("\n".join(errors), file=sys.stderr)
         sys.exit(f"{len(errors)}건 오류 — 생성 중단")
@@ -189,21 +210,26 @@ def main():
 
     OUT_META.write_text(
         banner
-        + "// 덱 순서는 모든 디지몬이 동일하다. data/dNN.js 의 결과 배열도 이 순서를 따른다.\n\n"
-        + f"export const meta = {dump({'duration': reports[0]['duration'], 'spTotal': reports[0]['spTotal']})};\n\n"
+        + "// 덱 순서는 모든 디지몬이 동일하다. data/dNN-M.js 의 결과 배열도 이 순서를 따른다.\n\n"
+        + f"export const meta = {dump({'durations': durations, 'spTotal': reports[0]['spTotal']})};\n\n"
         + f"export const decks = {dump(decks)};\n\n"
         + f"export const digimon = {dump(digimon)};\n",
         encoding="utf-8")
 
-    for d, r in zip(digimon, reports):
-        body = [{k: v for k, v in b.items() if k not in ("deck", "type", "mult", "atk")}
-                for b in r["blocks"]]
-        (OUT_DATA / f"{d['file']}.js").write_text(
-            banner + f"// {r['name']}\n\nexport default {dump(body)};\n", encoding="utf-8")
+    for d, nm in zip(digimon, names):
+        for sec in durations:
+            body = [{k: v for k, v in b.items()
+                     if k not in ("deck", "type", "sdem", "fin", "atk")}
+                    for b in by_pair[(nm, sec)]["blocks"]]
+            (OUT_DATA / f"{d['file']}-{sec // 60}.js").write_text(
+                banner + f"// {nm} · {sec // 60}분\n\nexport default {dump(body)};\n",
+                encoding="utf-8")
 
-    print(f"디지몬 {len(digimon)}마리, 덱 {len(decks)}개, 결과 {len(digimon) * len(decks)}건")
+    mins = ", ".join(f"{s // 60}분" for s in durations)
+    print(f"디지몬 {len(digimon)}마리, 덱 {len(decks)}개, 구간 {mins}")
+    print(f"결과 {len(digimon) * len(decks) * len(durations)}건")
     print(f"  {OUT_META}")
-    print(f"  {OUT_DATA}\\d01.js ~ d{len(digimon):02d}.js")
+    print(f"  {OUT_DATA}\\d01-{durations[0] // 60}.js ~ d{len(digimon):02d}-{durations[-1] // 60}.js")
 
 
 if __name__ == "__main__":
