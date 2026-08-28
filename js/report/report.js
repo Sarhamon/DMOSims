@@ -230,7 +230,7 @@ function renderDetail() {
                 <div><dt class="mono">총 딜</dt><dd>${n(r.total)}</dd></div>
                 <div><dt class="mono">DPS</dt><dd>${n(r.dps)}</dd></div>
                 <div><dt class="mono">시전 점유율</dt><dd>${r.uptime.toFixed(1)}<span class="u">% · 유휴 ${r.idle}초</span></dd></div>
-                ${r.selfBuff ? `<div><dt class="mono">자버프 적용</dt><dd>${r.selfBuff[0]}<span class="u">/ ${r.selfBuff[1]}회</span></dd></div>` : ''}
+                ${r.selfBuff ? `<div><dt class="mono">버프/디버프 적용</dt><dd>${r.selfBuff[0]}<span class="u">/ ${r.selfBuff[1]}회</span></dd></div>` : ''}
             </dl>
         </div>
 
