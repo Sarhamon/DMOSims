@@ -62,11 +62,14 @@ function calculateExchange() {
     const wi = parseInt(document.querySelector('input[name="expNonseason"]:checked').value);
     const si = parseInt(document.querySelector('input[name="expSeason"]:checked').value);
     const ri = parseInt(document.querySelector('input[name="expRanker"]:checked').value);
-    // 체크포인트 편린: 10라운드마다 15개.
-    // 시즌 던전(1회)은 100라운드 보스 포함, 비시즌 던전(2회)은 100라운드 보스 보상 제외.
-    const round = parseInt(document.getElementById('clearRound').value) || 0;
-    const cp = Math.floor(round / 10);
-    const checkpointPyeonrin = (cp + Math.min(cp, 9) * 2) * 15;
+    // 체크포인트 보상: 80라운드까지는 10라운드마다 영광의 편린 15개, 90~100라운드는 매 라운드 영광의 증표 1개.
+    // 시즌 던전(1회)은 100라운드 보스 포함, 비시즌 던전(2회)은 100라운드 보상 제외.
+    const round = Math.min(parseInt(document.getElementById('clearRound').value) || 0, 100);
+    const cpPyeonrin = Math.min(Math.floor(round / 10), 8) * 15;
+    const jeungpyoSeason = Math.max(0, round - 89);
+    const jeungpyoNonseason = Math.max(0, Math.min(round, 99) - 89);
+    const checkpointPyeonrin = cpPyeonrin * 3 +
+        (jeungpyoSeason + jeungpyoNonseason * 2) * EQUIV['영광의 증표'];
     const income =
         listEquiv(NONSEASON_TIERS[wi].rewards) * 2 +
         listEquiv(SEASON_TIERS[si].rewards) +
