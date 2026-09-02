@@ -2,6 +2,14 @@ import { NONSEASON_TIERS, SEASON_TIERS, RANKER_TIERS } from './data.js';
 import { EXCHANGE_GROUPS, EQUIV } from './exchange.js';
 import { loadTheme, toggleTheme } from '../theme.js';
 
+// 시즌 진행 순서: 비시즌 1차(3주) → 비시즌 2차(3주) → 시즌 던전(2주) → 휴식(1주)
+const PHASES = [
+    { label: '비시즌 1차', weeks: 3, season: false },
+    { label: '비시즌 2차', weeks: 3, season: false },
+    { label: '시즌 던전', weeks: 2, season: true },
+];
+const REST_WEEKS = 1;
+
 // 영광 재료만 영광의 편린 기준으로 환산해 합산
 function listEquiv(rewards) {
     return rewards.reduce((s, { name, qty }) => s + (EQUIV[name] ?? 0) * qty, 0);
@@ -26,6 +34,8 @@ function buildExchangeUI() {
     document.getElementById('expRanker').innerHTML =
         radio('expRanker', '없음', -1, true) +
         RANKER_TIERS.map((t, i) => radio('expRanker', shortLabel(t), i, false)).join('');
+    document.getElementById('expPhase').innerHTML =
+        PHASES.map((ph, i) => radio('expPhase', ph.label, i, i === 0)).join('');
 
     // 교환 목록: 재료별 카드 3열
     const cols = EXCHANGE_GROUPS.map((group, gi) => {
@@ -62,29 +72,42 @@ function calculateExchange() {
     const wi = parseInt(document.querySelector('input[name="expNonseason"]:checked').value);
     const si = parseInt(document.querySelector('input[name="expSeason"]:checked').value);
     const ri = parseInt(document.querySelector('input[name="expRanker"]:checked').value);
+    const pi = parseInt(document.querySelector('input[name="expPhase"]:checked').value);
     // 체크포인트 보상: 80라운드까지는 10라운드마다 영광의 편린 15개, 90~100라운드는 매 라운드 영광의 증표 1개.
-    // 시즌 던전(1회)은 100라운드 보스 포함, 비시즌 던전(2회)은 100라운드 보상 제외.
+    // 시즌 던전은 100라운드 보스 포함, 비시즌 던전은 100라운드 보상 제외.
     const round = Math.min(parseInt(document.getElementById('clearRound').value) || 0, 100);
     const cpPyeonrin = Math.min(Math.floor(round / 10), 8) * 15;
     const jeungpyoSeason = Math.max(0, round - 89);
     const jeungpyoNonseason = Math.max(0, Math.min(round, 99) - 89);
-    const checkpointPyeonrin = cpPyeonrin * 3 +
-        (jeungpyoSeason + jeungpyoNonseason * 2) * EQUIV['영광의 증표'];
-    const income =
-        listEquiv(NONSEASON_TIERS[wi].rewards) * 2 +
-        listEquiv(SEASON_TIERS[si].rewards) +
+    // 던전 1회차당 수급량
+    const nonseasonIncome = listEquiv(NONSEASON_TIERS[wi].rewards) +
+        cpPyeonrin + jeungpyoNonseason * EQUIV['영광의 증표'];
+    const seasonIncome = listEquiv(SEASON_TIERS[si].rewards) +
         (ri >= 0 ? listEquiv(RANKER_TIERS[ri].rewards) : 0) +
-        checkpointPyeonrin;
+        cpPyeonrin + jeungpyoSeason * EQUIV['영광의 증표'];
 
     let timeText;
     if (remaining <= 0) {
         timeText = '✅ 바로 제작 가능';
-    } else if (income <= 0) {
+    } else if (nonseasonIncome * 2 + seasonIncome <= 0) {
         timeText = '⚠️ 수급 불가';
     } else {
-        const seasons = Math.ceil(remaining / income);
-        // 시즌 8주 + 시즌 사이 휴식 1주 (마지막 시즌 뒤 휴식은 제외)
-        timeText = `${seasons * 9 - 1}주 / ${seasons}시즌`;
+        // 현재 진행 중인 단계(보상 미수령)부터 한 단계씩 누적해 목표 달성 시점을 찾는다
+        let need = remaining;
+        let weeks = 0;
+        let seasons = 1;
+        let p = pi;
+        while (need > 0) {
+            const phase = PHASES[p];
+            weeks += phase.weeks;
+            need -= phase.season ? seasonIncome : nonseasonIncome;
+            if (phase.season && need > 0) {
+                weeks += REST_WEEKS;
+                seasons++;
+            }
+            p = (p + 1) % PHASES.length;
+        }
+        timeText = `${weeks}주 / ${seasons}시즌`;
     }
 
     result.innerHTML =
@@ -102,6 +125,7 @@ function saveState() {
         nonseason: document.querySelector('input[name="expNonseason"]:checked').value,
         season: document.querySelector('input[name="expSeason"]:checked').value,
         ranker: document.querySelector('input[name="expRanker"]:checked').value,
+        phase: document.querySelector('input[name="expPhase"]:checked').value,
         round: document.getElementById('clearRound').value,
     };
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
@@ -119,6 +143,7 @@ function loadState() {
     setRadio('expNonseason', state.nonseason);
     setRadio('expSeason', state.season);
     setRadio('expRanker', state.ranker);
+    setRadio('expPhase', state.phase);
 
     if (state.round !== undefined) document.getElementById('clearRound').value = state.round;
 
@@ -145,7 +170,7 @@ document.getElementById('exchangeList').addEventListener('change', update);
 [...OWN_IDS, 'clearRound'].forEach(id => {
     document.getElementById(id).addEventListener('input', update);
 });
-['expNonseason', 'expSeason', 'expRanker'].forEach(id => {
+['expNonseason', 'expSeason', 'expRanker', 'expPhase'].forEach(id => {
     document.getElementById(id).addEventListener('change', update);
 });
 document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
