@@ -10,15 +10,35 @@ const PHASES = [
 ];
 const REST_WEEKS = 1;
 
-// 영광 재료만 영광의 편린 기준으로 환산해 합산
-function listEquiv(rewards) {
-    return rewards.reduce((s, { name, qty }) => s + (EQUIV[name] ?? 0) * qty, 0);
+// 재료 단계: 편린 → 파편 → 증표 → 초월의 증표 (오름차순)
+const TIER_NAMES = Object.keys(EQUIV);
+const TIER_W = Object.values(EQUIV);
+
+// 영광 재료만 단계별로 나눠 영광의 편린 환산값 배열로 집계
+function tierValues(list) {
+    const v = TIER_W.map(() => 0);
+    list.forEach(({ name, qty }) => {
+        const i = TIER_NAMES.indexOf(name);
+        if (i >= 0) v[i] += qty * TIER_W[i];
+    });
+    return v;
 }
 
-// 교환 아이템의 영광의 편린 환산 단가
-function unitCost(item) {
-    const cost = item.mats.reduce((s, m) => s + EQUIV[m.name] * m.qty, 0);
-    return cost / item.out;
+// 교환 아이템 1개당 단계별 비용
+function tierCost(item) {
+    return tierValues(item.mats).map(v => v / item.out);
+}
+
+// 재료는 위 단계로만 교환되므로, 각 단계의 비용은 그 단계 이하의 재고로만 지불할 수 있다.
+// 낮은 단계부터 지불하고 남은 재고만 위 단계로 올려 단계별 부족분을 구한다.
+function shortfall(stock, cost) {
+    let carry = 0;
+    return TIER_W.map((_, i) => {
+        const have = stock[i] + carry;
+        const next = TIER_W[i + 1];
+        carry = next ? Math.floor(Math.max(0, have - cost[i]) / next) * next : 0;
+        return Math.max(0, cost[i] - have);
+    });
 }
 
 function buildExchangeUI() {
@@ -61,13 +81,9 @@ function calculateExchange() {
     const [gi, ii] = checked.dataset.ex.split('-').map(Number);
     const item = EXCHANGE_GROUPS[gi].items[ii];
 
-    const totalCost = unitCost(item);
-    const owned =
-        (parseInt(document.getElementById('ownPyeonrin').value) || 0) * 1 +
-        (parseInt(document.getElementById('ownPapyeon').value) || 0) * 10 +
-        (parseInt(document.getElementById('ownJeungpyo').value) || 0) * 100 +
-        (parseInt(document.getElementById('ownChowol').value) || 0) * 1000;
-    const remaining = Math.max(0, totalCost - owned);
+    const cost = tierCost(item);
+    const own = OWN_IDS.map((id, i) => (parseInt(document.getElementById(id).value) || 0) * TIER_W[i]);
+    const remaining = shortfall(own, cost);
 
     const wi = parseInt(document.querySelector('input[name="expNonseason"]:checked').value);
     const si = parseInt(document.querySelector('input[name="expSeason"]:checked').value);
@@ -79,29 +95,44 @@ function calculateExchange() {
     const cpPyeonrin = Math.min(Math.floor(round / 10), 8) * 15;
     const jeungpyoSeason = Math.max(0, round - 89);
     const jeungpyoNonseason = Math.max(0, Math.min(round, 99) - 89);
-    // 던전 1회차당 수급량
-    const nonseasonIncome = listEquiv(NONSEASON_TIERS[wi].rewards) +
-        cpPyeonrin + jeungpyoNonseason * EQUIV['영광의 증표'];
-    const seasonIncome = listEquiv(SEASON_TIERS[si].rewards) +
-        (ri >= 0 ? listEquiv(RANKER_TIERS[ri].rewards) : 0) +
-        cpPyeonrin + jeungpyoSeason * EQUIV['영광의 증표'];
+    // 던전 1회차당 단계별 수급량
+    const nonseasonIncome = tierValues([
+        ...NONSEASON_TIERS[wi].rewards,
+        { name: '영광의 편린', qty: cpPyeonrin },
+        { name: '영광의 증표', qty: jeungpyoNonseason },
+    ]);
+    const seasonIncome = tierValues([
+        ...SEASON_TIERS[si].rewards,
+        ...(ri >= 0 ? RANKER_TIERS[ri].rewards : []),
+        { name: '영광의 편린', qty: cpPyeonrin },
+        { name: '영광의 증표', qty: jeungpyoSeason },
+    ]);
+
+    // 한 시즌(비시즌 2회 + 시즌 1회) 수급량. 부족한 단계는 그 단계 이하의 수급으로만 채워진다.
+    const cycle = nonseasonIncome.map((v, i) => v * 2 + seasonIncome[i]);
+    let supplied = true;
+    for (let i = 0, below = 0; i < TIER_W.length; i++) {
+        below += cycle[i];
+        if (remaining[i] > 0 && below === 0) supplied = false;
+    }
 
     let timeText;
-    if (remaining <= 0) {
+    if (remaining.every(v => v <= 0)) {
         timeText = '✅ 바로 제작 가능';
-    } else if (nonseasonIncome * 2 + seasonIncome <= 0) {
+    } else if (!supplied) {
         timeText = '⚠️ 수급 불가';
     } else {
         // 현재 진행 중인 단계(보상 미수령)부터 한 단계씩 누적해 목표 달성 시점을 찾는다
-        let need = remaining;
+        let stock = own.slice();
         let weeks = 0;
         let seasons = 1;
         let p = pi;
-        while (need > 0) {
+        while (shortfall(stock, cost).some(v => v > 0)) {
             const phase = PHASES[p];
             weeks += phase.weeks;
-            need -= phase.season ? seasonIncome : nonseasonIncome;
-            if (phase.season && need > 0) {
+            const income = phase.season ? seasonIncome : nonseasonIncome;
+            stock = stock.map((v, i) => v + income[i]);
+            if (phase.season && shortfall(stock, cost).some(v => v > 0)) {
                 weeks += REST_WEEKS;
                 seasons++;
             }
