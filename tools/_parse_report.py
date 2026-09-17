@@ -4,7 +4,8 @@ Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/
 리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(5/10/15분), 그 안에 덱 블록이 들어 있다.
 덱 목록은 리포트 전체를 합쳐 reportMeta.js 에 한 번만 담고,
 디지몬·구간별 결과는 data/dNN-M.js 로 쪼개 화면에서 그때그때 불러 쓴다.
-덱이 새로 생긴 뒤 다시 안 돌린 리포트가 있으면 그 덱 자리는 null 이 된다.
+덱이 새로 생긴 뒤 다시 안 돌린 리포트가 있으면, 옵션이 같은 덱의 결과를 그대로 쓴다(from 에 출처).
+그런 덱조차 없으면 그 자리는 null 이 된다.
 
 파일명을 dNN 으로 두는 이유: 디지몬 이름에 콜론(라스트 에볼루션: 인연)이 들어가 파일명으로 못 쓴다.
 뒤의 M 은 전투 시간(분)이다.
@@ -181,6 +182,22 @@ def main():
                 errors.append(f"{r['name']} / {k[0]}: 스뎀·최종·공격력이 기준 리포트와 다름")
         r["blocks"] = [by_key.get(k) for k in deck_key]
 
+    # 덱이 결과에 미치는 입력은 (스뎀, 최종, 공격력) 세 개뿐이다 — 전 리포트 999쌍 전수 확인.
+    # 그래서 리포트에 없는 덱은 그 세 값이 같은 덱의 결과를 그대로 쓸 수 있다.
+    # 어디서 가져왔는지 from 에 남겨 화면에서 알려 준다. 가져올 덱이 없으면 None 으로 남는다.
+    for r in reports:
+        twin = {}
+        for b in r["blocks"]:
+            if b is not None:
+                twin.setdefault((b["sdem"], b["fin"], b["atk"]), b)
+        for i, (k, b) in enumerate(zip(deck_key, r["blocks"])):
+            if b is not None:
+                continue
+            d = ref[k]
+            src = twin.get((d["sdem"], d["fin"], d["atk"]))
+            if src is not None:
+                r["blocks"][i] = dict(src, **{"from": src["deck"]})
+
     csv_effects = parse_decks_csv()
     for k in deck_key:
         if k not in csv_effects:
@@ -243,7 +260,16 @@ def main():
     print(f"  {OUT_META}")
     print(f"  {OUT_DATA}\\d01-{durations[0] // 60}.js ~ d{len(digimon):02d}-{durations[-1] // 60}.js")
 
-    # 덱이 새로 생긴 뒤 안 돌린 리포트를 알려 준다. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
+    # 옵션이 같은 덱에서 가져온 결과를 알려 준다
+    derived = {}
+    for nm in names:
+        for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]):
+            if b is not None and "from" in b:
+                derived.setdefault((k[0], b["from"]), []).append(nm)
+    for (dk, src), nms in derived.items():
+        print(f"덱 결과 가져옴: {dk} ← {src} ({len(nms)}마리)")
+
+    # 가져올 덱조차 없어 빈 자리로 남은 덱. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
     holes = {}
     for nm in names:
         gaps = tuple(k[0] for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]) if b is None)
