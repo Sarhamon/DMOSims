@@ -1,9 +1,10 @@
 """
 Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/data/dNN-M.js
 
-리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(5/10/15분), 그 안에 덱 37개 블록이 들어 있다.
-덱 순서는 모든 리포트가 동일하므로 덱 목록은 reportMeta.js 에 한 번만 담고,
-디지몬·구간별 결과 37개는 data/dNN-M.js 로 쪼개 화면에서 그때그때 불러 쓴다.
+리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(5/10/15분), 그 안에 덱 블록이 들어 있다.
+덱 목록은 리포트 전체를 합쳐 reportMeta.js 에 한 번만 담고,
+디지몬·구간별 결과는 data/dNN-M.js 로 쪼개 화면에서 그때그때 불러 쓴다.
+덱이 새로 생긴 뒤 다시 안 돌린 리포트가 있으면 그 덱 자리는 null 이 된다.
 
 파일명을 dNN 으로 두는 이유: 디지몬 이름에 콜론(라스트 에볼루션: 인연)이 들어가 파일명으로 못 쓴다.
 뒤의 M 은 전투 시간(분)이다.
@@ -160,20 +161,25 @@ def main():
         if len(notes) > 1:
             errors.append(f"{nm}: 구간마다 머리말 안내가 다름")
 
-    # 덱 집합은 모든 리포트가 같지만 정렬 순서는 리포트마다 다르다.
-    # 첫 리포트 순서를 기준으로 삼고, 나머지 리포트의 결과를 그 순서에 맞춰 다시 늘어놓는다.
-    deck_key = [(b["deck"], b["type"]) for b in reports[0]["blocks"]]
+    # 덱 집합은 리포트마다 다를 수 있다 — 디지몬이 늘면 덱도 같이 늘어난다.
+    # 첫 리포트 순서를 기준으로 삼고 거기 없는 덱은 뒤에 붙여 기준 순서를 만든다.
+    # 각 리포트의 결과를 그 순서로 다시 늘어놓고, 결과가 없는 덱 자리는 None 으로 둔다.
+    ref, deck_key = {}, []
+    for r in reports:
+        for b in r["blocks"]:
+            k = (b["deck"], b["type"])
+            if k not in ref:
+                ref[k] = b
+                deck_key.append(k)
     for r in reports:
         by_key = {(b["deck"], b["type"]): b for b in r["blocks"]}
-        if set(by_key) != set(deck_key) or len(by_key) != len(r["blocks"]):
-            errors.append(f"{r['name']}: 덱 구성이 첫 리포트와 다름")
+        if len(by_key) != len(r["blocks"]):
+            errors.append(f"{r['name']}: 같은 덱이 두 번 나옴")
             continue
-        for k in deck_key:
-            b = by_key[k]
-            ref = reports[0]["blocks"][deck_key.index(k)]
-            if (b["sdem"], b["fin"], b["atk"]) != (ref["sdem"], ref["fin"], ref["atk"]):
-                errors.append(f"{r['name']} / {k[0]}: 스뎀·최종·공격력이 첫 리포트와 다름")
-        r["blocks"] = [by_key[k] for k in deck_key]
+        for k, b in by_key.items():
+            if (b["sdem"], b["fin"], b["atk"]) != (ref[k]["sdem"], ref[k]["fin"], ref[k]["atk"]):
+                errors.append(f"{r['name']} / {k[0]}: 스뎀·최종·공격력이 기준 리포트와 다름")
+        r["blocks"] = [by_key.get(k) for k in deck_key]
 
     csv_effects = parse_decks_csv()
     for k in deck_key:
@@ -187,7 +193,7 @@ def main():
 
     # 덱 종류에 박힌 U 수 — "머시풀 1U 파피몬쪽" 처럼 끝이 아닌 자리에 오기도 한다
     decks = []
-    for b in reports[0]["blocks"]:
+    for b in (ref[k] for k in deck_key):
         m = U_RE.search(b["type"])
         if not m:
             errors.append(f"덱 종류에서 U 수를 못 읽음: {b['type']}")
@@ -198,7 +204,9 @@ def main():
 
     # 머리말 안내는 구간이 달라도 같다(위에서 확인)
     notes_of = {r["name"]: r["notes"] for r in reports}
-    digimon = [{"name": nm, "file": f"d{i:02d}", "notes": notes_of[nm]}
+    # 결과가 있는 덱 수는 디지몬마다 다를 수 있다
+    deck_n = {r["name"]: sum(b is not None for b in r["blocks"]) for r in reports}
+    digimon = [{"name": nm, "file": f"d{i:02d}", "decks": deck_n[nm], "notes": notes_of[nm]}
                for i, nm in enumerate(names, 1)]
     if errors:
         print("\n".join(errors), file=sys.stderr)
@@ -210,7 +218,8 @@ def main():
 
     OUT_META.write_text(
         banner
-        + "// 덱 순서는 모든 디지몬이 동일하다. data/dNN-M.js 의 결과 배열도 이 순서를 따른다.\n\n"
+        + "// 덱 순서는 모든 디지몬이 동일하다. data/dNN-M.js 의 결과 배열도 이 순서를 따른다.\n"
+        + "// 리포트에 없던 덱 자리는 null 이다.\n\n"
         + f"export const meta = {dump({'durations': durations, 'spTotal': reports[0]['spTotal']})};\n\n"
         + f"export const decks = {dump(decks)};\n\n"
         + f"export const digimon = {dump(digimon)};\n",
@@ -218,7 +227,8 @@ def main():
 
     for d, nm in zip(digimon, names):
         for sec in durations:
-            body = [{k: v for k, v in b.items()
+            body = [None if b is None else
+                    {k: v for k, v in b.items()
                      if k not in ("deck", "type", "sdem", "fin", "atk")}
                     for b in by_pair[(nm, sec)]["blocks"]]
             (OUT_DATA / f"{d['file']}-{sec // 60}.js").write_text(
@@ -227,9 +237,21 @@ def main():
 
     mins = ", ".join(f"{s // 60}분" for s in durations)
     print(f"디지몬 {len(digimon)}마리, 덱 {len(decks)}개, 구간 {mins}")
-    print(f"결과 {len(digimon) * len(decks) * len(durations)}건")
+    filled = sum(deck_n[nm] for nm in names) * len(durations)
+    grid = len(digimon) * len(decks) * len(durations)
+    print(f"결과 {filled}건" + (f" (빈 자리 {grid - filled}건)" if grid != filled else ""))
     print(f"  {OUT_META}")
     print(f"  {OUT_DATA}\\d01-{durations[0] // 60}.js ~ d{len(digimon):02d}-{durations[-1] // 60}.js")
+
+    # 덱이 새로 생긴 뒤 안 돌린 리포트를 알려 준다. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
+    holes = {}
+    for nm in names:
+        gaps = tuple(k[0] for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]) if b is None)
+        if gaps:
+            holes.setdefault(gaps, []).append(nm)
+    for gaps, nms in holes.items():
+        print(f"결과 없는 덱: {' / '.join(gaps)}")
+        print(f"  {len(nms)}마리 — {' / '.join(nms)}")
 
 
 if __name__ == "__main__":

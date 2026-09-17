@@ -12,7 +12,7 @@ const cache = new Map();
 
 let picked = null;      // 디지몬 이름. null 이면 디지몬 목록
 let deckIdx = null;     // decks 의 인덱스. null 이면 덱 목록
-let rows = null;        // 현재 디지몬의 결과 37개 (decks 와 같은 순서)
+let rows = null;        // 현재 디지몬의 결과 (decks 와 같은 순서, 리포트에 없던 덱은 null)
 let sortMode = 'own';   // 'own' = 이 디지몬 덱 먼저, 'dmg' = 딜량 순
 let dur = meta.durations[0];  // 전투 시간(초)
 
@@ -27,13 +27,14 @@ async function load(name) {
 
 /* 덱 정렬. 어느 쪽이든 총 딜 내림차순이 바탕이고,
    'own' 이면 보고 있는 디지몬이 들어가는 덱을 위로 올린다.
-   목록과 상세 셀렉트가 같은 순서를 쓴다. */
+   목록과 상세 셀렉트가 같은 순서를 쓴다.
+   이 디지몬 리포트에 없던 덱은 결과가 null 이므로 빼고 늘어놓는다. */
 function deckOrder() {
     const has = (deck) => (deck.members.includes(picked) ? 0 : 1);
     const rank = sortMode === 'own'
         ? (a, b) => has(a.deck) - has(b.deck) || b.r.total - a.r.total
         : (a, b) => b.r.total - a.r.total;
-    return decks.map((deck, i) => ({ deck, i, r: rows[i] })).sort(rank);
+    return decks.map((deck, i) => ({ deck, i, r: rows[i] })).filter(({ r }) => r).sort(rank);
 }
 
 function chip(slot, t) {
@@ -91,7 +92,7 @@ function renderStatic() {
             <span class="module-icon">${BOLT}</span>
             <h3 class="module-title">${esc(d.name)}</h3>
             <p class="module-desc">
-                <span class="dg-sub">덱 ${decks.length}개 비교</span>
+                <span class="dg-sub">덱 ${d.decks}개 비교</span>
             </p>
             <span class="module-tag mono">
                 Deal Cycle
@@ -116,15 +117,15 @@ function digimonHead(sub) {
 /* ---------- 2단계 · 덱 목록 -------------------------------------------- */
 function renderDecks() {
     const order = deckOrder();
-    const own = decks.filter((d) => d.members.includes(picked)).length;
+    const own = order.filter(({ deck }) => deck.members.includes(picked)).length;
 
     $('#viewDecks').innerHTML = `
-        ${digimonHead(`Decks 01 / ${decks.length}`)}
+        ${digimonHead(`Decks 01 / ${order.length}`)}
 
         <div class="section-head mono">
             <h2>Deck</h2>
             <span class="rule"></span>
-            <span class="count">${own} / ${decks.length}</span>
+            <span class="count">${own} / ${order.length}</span>
         </div>
         <div class="journal-radios deck-sort">
             <label class="radio-option">
@@ -216,7 +217,7 @@ function renderDetail() {
         </li>`).join('');
 
     $('#viewDetail').innerHTML = `
-        ${digimonHead(`Deck ${String(rank + 1).padStart(2, '0')} / ${decks.length}`)}
+        ${digimonHead(`Deck ${String(rank + 1).padStart(2, '0')} / ${order.length}`)}
 
         <div class="panel rp-block deck-card">
             <h3 class="section-title">${esc(deck.name)} <span class="hint">${esc(deck.type)}</span></h3>
@@ -261,6 +262,8 @@ function renderDetail() {
 /* ---------- 화면 전환 --------------------------------------------------- */
 async function render() {
     if (picked !== null && rows === null) rows = await load(picked);
+    /* 덱 인덱스는 디지몬끼리 공유하므로, 이 디지몬에 결과가 없는 덱이면 덱 목록으로 되돌린다 */
+    if (picked !== null && deckIdx !== null && rows[deckIdx] === null) deckIdx = null;
 
     $(`#durPick input[value="${dur}"]`).checked = true;
     $('#metaDuration').innerHTML = `${dur}<span class="u">초</span>`;
