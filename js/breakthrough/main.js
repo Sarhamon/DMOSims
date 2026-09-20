@@ -22,6 +22,9 @@ let sim;
 // 기대값상 추천 { best: 행 index | -1(멈춤), stop }. render()마다 갱신.
 let rec = { best: -1, stop: false };
 
+// 결과 입력 대기 중인 행 index (null이면 없음). 인게임 결과를 직접 체크받는다.
+let pending = null;
+
 // 상태(시뮬 진행 + 주사위 + 가격)를 localStorage에 저장해 새로고침해도 유지.
 // 1 랜덤 능력치 = 주사위 1개. 가격은 비트 단위.
 const STORAGE_KEY = 'dmo_breakthrough';
@@ -108,22 +111,23 @@ function newSim(randomize) {
         return { opt, pos: 0, base: 0, bonus: 0, status: [] };
     });
     sim = { count: 0, prob: PROB_START, rows };
+    pending = null;
     render();
 }
 
-// 한 행 1회 돌파 시도 (공유 카운트 1 소모, 공유 확률로 롤)
-function attempt(i) {
+// 행 클릭 = 결과 입력 대기. 같은 행을 다시 누르면 취소.
+function askResult(i) {
+    pending = pending === i ? null : i;
+    render();
+}
+
+// 입력받은 실제 결과를 1회 반영 (adv = 0 실패 / 1~3 성공 칸 수)
+function applyResult(i, adv) {
     const row = sim.rows[i];
+    pending = null;
     if (sim.count >= MAX_ATTEMPTS || row.pos >= CELLS) return;
 
     sim.count++;
-    const [s1, s2, s3] = STAGE_TABLE[sim.prob];
-    const r = Math.random() * 100;
-    let adv = 0;
-    if (r < s1) adv = 1;
-    else if (r < s1 + s2) adv = 2;
-    else if (r < s1 + s2 + s3) adv = 3;
-
     if (adv > 0) {
         // 성공: 단계만큼 전진, 각 칸 녹색(값 획득)
         for (let k = 0; k < adv && row.pos < CELLS; k++) {
@@ -151,9 +155,10 @@ function renderRow(row, i) {
     el.className = `bt-row bt-row--${row.opt.kind}`;
     if (rowActive) {
         el.classList.add('bt-row--active');
-        el.title = '눌러서 돌파 시도';
-        el.onclick = () => attempt(i);
+        el.title = '눌러서 결과 입력';
+        el.onclick = () => askResult(i);
     }
+    if (i === pending) el.classList.add('bt-row--pending');
     if (i === rec.best) {
         el.classList.add('bt-row--rec');
         const badge = document.createElement('span');
@@ -193,6 +198,31 @@ function renderRow(row, i) {
     return el;
 }
 
+// 결과 입력 바: 실제 돌파 결과를 성공 칸 수 / 실패로 체크. 남은 칸 수만큼만 노출.
+function renderResultBar(row, i) {
+    const bar = document.createElement('div');
+    bar.className = 'bt-result';
+
+    const label = document.createElement('span');
+    label.className = 'bt-result-label';
+    label.textContent = '결과 입력';
+    bar.appendChild(label);
+
+    const btn = (cls, text, onclick) => {
+        const b = document.createElement('button');
+        b.className = `bt-result-btn ${cls}`;
+        b.textContent = text;
+        b.onclick = onclick;
+        bar.appendChild(b);
+    };
+
+    const maxAdv = Math.min(3, CELLS - row.pos);
+    for (let adv = 1; adv <= maxAdv; adv++) btn('ok', `성공 ${adv}칸`, () => applyResult(i, adv));
+    btn('fail', '실패', () => applyResult(i, 0));
+    btn('cancel', '취소', () => { pending = null; render(); });
+    return bar;
+}
+
 // 사이드 패널: 행 순서대로 옵션 선택 드롭다운 (▲증가 / ▼감소)
 function renderOptList() {
     optListEl.innerHTML = '';
@@ -218,6 +248,7 @@ function renderOptList() {
         sel.onchange = () => {
             // 옵션 변경 시 해당 행 진행도만 초기화 (공유 카운트/확률 유지)
             Object.assign(row, { opt: pool[+sel.value], pos: 0, base: 0, bonus: 0, status: [] });
+            pending = null;
             render();
         };
         wrap.appendChild(sel);
@@ -234,6 +265,9 @@ function accBox(label, val, unit, cls) {
 }
 
 function render() {
+    // 시도 불가 행이 된 경우(횟수 소진/완성) 대기 상태 해제
+    if (pending !== null && (sim.count >= MAX_ATTEMPTS || sim.rows[pending].pos >= CELLS)) pending = null;
+
     countEl.textContent = sim.count;
     probEl.textContent = `${sim.prob}%`;
     STAGE_TABLE[sim.prob].forEach((p, i) => { stageEls[i].textContent = `${p}%`; });
@@ -248,7 +282,10 @@ function render() {
     }
 
     rowsEl.innerHTML = '';
-    sim.rows.forEach((row, i) => rowsEl.appendChild(renderRow(row, i)));
+    sim.rows.forEach((row, i) => {
+        rowsEl.appendChild(renderRow(row, i));
+        if (i === pending) rowsEl.appendChild(renderResultBar(row, i));
+    });
 
     renderOptList();
 
@@ -271,13 +308,15 @@ function render() {
         ? '돌파 시도 횟수를 모두 사용했습니다. (다시시도/랜덤 능력치로 초기화)'
         : allDone
             ? '모든 행이 완성되었습니다.'
-            : rec.ready === false
-                ? '전역 최적표 계산 중…'
-                : rec.best >= 0
-                    ? `기대값상 베스트: ${sim.rows[rec.best].opt.kind === 'inc' ? '▲' : '▼'} ${sim.rows[rec.best].opt.name} 행 (★ 표시)`
-                    : rec.stop
-                        ? '기대값상 지금 멈추는 게 이득입니다. (더 누르면 손해)'
-                        : '강조된 칸을 클릭하면 해당 행을 1회 돌파 시도합니다.';
+            : pending !== null
+                ? `${sim.rows[pending].opt.name} 행의 실제 돌파 결과를 선택하세요.`
+                : rec.ready === false
+                    ? '전역 최적표 계산 중…'
+                    : rec.best >= 0
+                        ? `기대값상 베스트: ${sim.rows[rec.best].opt.kind === 'inc' ? '▲' : '▼'} ${sim.rows[rec.best].opt.name} 행 (★ 표시)`
+                        : rec.stop
+                            ? '기대값상 지금 멈추는 게 이득입니다. (더 누르면 손해)'
+                            : '행을 클릭한 뒤 실제 돌파 결과(성공 칸 수/실패)를 입력하세요.';
 }
 
 // 랜덤 능력치 = 주사위 1개 소모 후 옵션 재추첨
