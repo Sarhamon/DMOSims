@@ -12,7 +12,7 @@ const cache = new Map();
 
 let picked = null;      // 디지몬 이름. null 이면 디지몬 목록
 let deckIdx = null;     // decks 의 인덱스. null 이면 덱 목록
-let rows = null;        // 현재 디지몬의 결과 37개 (decks 와 같은 순서)
+let rows = null;        // 현재 디지몬의 결과 40개 (decks 와 같은 순서)
 let sortMode = 'own';   // 'own' = 이 디지몬 덱 먼저, 'dmg' = 딜량 순
 let dur = meta.durations[0];  // 전투 시간(초)
 
