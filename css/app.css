@@ -1,5 +1,5 @@
 /* ==========================================================================
-   DMOKit — 기능별 컴포넌트 (가챠 / 옵션 / 돌파 / 수집 / 랭킹 / 백업)
+   DMOKit — 기능별 컴포넌트 (가챠 / 옵션 / 돌파 / 수집 / 랭킹 / 퀘스트)
    css/base.css → css/tool.css → 이 파일 순으로 로드한다.
    클래스명과 구조는 기존 JS 계약 그대로 두고, 토큰과 조판만 새 언어로 옮겼다.
    ========================================================================== */
@@ -1173,47 +1173,6 @@ html.dark-mode .bt-acc.base b { color: #69db7c; }
     .bt-acc { min-width: 46px; }
     .bt-total-item { flex-basis: calc(50% - 4px); }
 }
-
-/* ===== 데이터 백업 / 복원 ================================================ */
-.backup-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-.backup-text {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 96px;
-    resize: vertical;
-    padding: 12px 13px;
-    font-family: var(--mono);
-    font-size: 0.8125rem;
-    line-height: 1.5;
-    word-break: break-all;
-    color: var(--ink);
-    background: var(--bg);
-    border: 1px solid var(--line-strong);
-    border-radius: 3px;
-    outline: none;
-    transition: border-color 0.18s, box-shadow 0.18s;
-}
-.backup-text:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
-.backup-text::placeholder { color: var(--ink-faint); }
-.backup-qr { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 16px; }
-.backup-qr:empty { display: none; }
-.backup-qr-img {
-    width: 240px;
-    max-width: 100%;
-    height: auto;
-    padding: 12px;
-    border: 1px solid var(--line);
-    border-radius: 3px;
-    background: #fff;
-    image-rendering: pixelated; /* QR 스캔 정확도 — 보간되면 안 된다 */
-}
-.backup-qr-note { margin: 0; font-size: 0.8125rem; color: var(--ink-faint); text-align: center; }
-/* min-height 로 자리를 잡아둔다 — 메시지가 뜰 때 레이아웃이 밀리지 않게 */
-.backup-msg { margin: 12px 0 0; min-height: 1.2em; font-size: 0.875rem; }
-.backup-msg.ok  { color: #2f9e44; }
-.backup-msg.err { color: #e03131; }
-html.dark-mode .backup-msg.ok  { color: #69db7c; }
-html.dark-mode .backup-msg.err { color: #ff8787; }
 
 /* ===== 모듈 퀘스트 ====================================================== */
 .quest-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
