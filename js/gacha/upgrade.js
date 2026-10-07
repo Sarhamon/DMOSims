@@ -48,7 +48,3 @@ export function maybeUpgrade(item, scope) {
         _orig: { name: item.name, grade: item.grade },
     };
 }
-
-export function getUpgradeRate(grade) {
-    return upgradeMap[grade] ? upgradeMap[grade].rate : 0;
-}

@@ -88,8 +88,6 @@ html.dark-mode .grade-SSplus { --gc: #c084fc; color: #c084fc; }
     cursor: pointer;
     user-select: none;
 }
-.multi-pull { display: flex; align-items: center; gap: 8px; }
-.multi-pull input[type="number"] { width: 90px; }
 
 #drawPicker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 #drawPicker .buff-toggle { justify-content: flex-start; text-align: left; }
@@ -154,17 +152,6 @@ html.dark-mode .grade-SSplus { --gc: #c084fc; color: #c084fc; }
     letter-spacing: -0.02em;
 }
 .buff-toggle:has(input:checked) .buff-toggle-name { color: var(--accent-ink); }
-.buff-toggle-dur {
-    flex-shrink: 0;
-    padding: 2px 7px;
-    border-radius: 2px;
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    background: var(--bg-sunken);
-    color: var(--ink-dim);
-    white-space: nowrap;
-}
-.buff-toggle:has(input:checked) .buff-toggle-dur { background: var(--accent-wash); color: var(--accent-ink); }
 
 /* ===== 누적 통계 ========================================================= */
 .stats-bar { display: flex; flex-direction: column; gap: 14px; }
@@ -410,12 +397,10 @@ html.dark-mode .grade-SSplus { --gc: #c084fc; color: #c084fc; }
 
 /* ===== 융합 컨트롤 ======================================================= */
 .fusion-controls { display: flex; flex-direction: column; gap: 18px; }
-.fusion-group-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.fusion-group-row select { flex: 1; min-width: 200px; }
 .fusion-avail { width: 100%; font-size: 0.8438rem; color: var(--ink-dim); }
 .mode-pane { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-.fusion-mode-toggle, .rate-tabs {
+.rate-tabs {
     display: inline-flex;
     align-self: flex-start;
     flex-wrap: wrap;
