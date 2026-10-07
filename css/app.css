@@ -1214,3 +1214,70 @@ html.dark-mode .bt-acc.base b { color: #69db7c; }
 .backup-msg.err { color: #e03131; }
 html.dark-mode .backup-msg.ok  { color: #69db7c; }
 html.dark-mode .backup-msg.err { color: #ff8787; }
+
+/* ===== 모듈 퀘스트 ====================================================== */
+.quest-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.quest-head .section-title { margin: 0; }
+
+.quest-timeline {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0 0 0 14px;
+    border-left: 1px solid var(--line-strong);
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+}
+.quest-timeline li { position: relative; padding: 2px 0; }
+.quest-timeline li::before {
+    content: "";
+    position: absolute;
+    left: -18px;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--line-strong);
+}
+.quest-timeline li:first-child { color: var(--ink-dim); }
+.quest-timeline li:first-child::before { background: var(--accent); }
+
+.quest-totals { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+
+.quest-list {
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.quest-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-top: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.18s;
+}
+.quest-row:first-child { border-top: none; }
+.quest-row:hover { background: var(--accent-wash); }
+.quest-row input[type="checkbox"] { width: 17px; height: 17px; flex-shrink: 0; }
+.quest-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.quest-name { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
+.quest-meta { font-size: 0.8125rem; color: var(--ink-faint); }
+.quest-reward { white-space: nowrap; font-family: var(--mono); font-size: 0.8125rem; color: var(--ink-dim); }
+.quest-row.done { background: var(--bg-sunken); }
+.quest-row.done .quest-name { color: var(--ink-faint); text-decoration: line-through; }
+
+.quest-grade { font-family: var(--mono); font-weight: 600; }
+.grade-na { color: var(--ink-dim); }
+.grade-s  { color: #2f6fc0; }
+.grade-sp { color: #8a4fd0; }
+.grade-ss { color: var(--amber); }
+html.dark-mode .grade-s  { color: #5aa7f0; }
+html.dark-mode .grade-sp { color: #b388f0; }
+
+.quest-note { margin: 0; font-size: 0.8125rem; color: var(--ink-faint); }
+
+@media (max-width: 560px) {
+    .quest-row { flex-wrap: wrap; }
+    .quest-reward { margin-left: 29px; }
+}

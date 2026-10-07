@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMO 모듈 퀘스트 체크</title>
+    <script>
+        if (localStorage.getItem('dmo_theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+    <link rel="icon" type="image/png" href="../img/dmo.png">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/tool.css">
+    <link rel="stylesheet" href="../css/app.css">
+    <meta property="og:title" content="DMO 모듈 퀘스트 체크">
+    <meta property="og:description" content="일일 · 주간 모듈 퀘스트 완료 여부를 체크하고, 한국 시간 기준으로 자동 초기화합니다.">
+    <meta property="og:image" content="../img/dmo.png">
+</head>
+<body>
+
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Quest</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Module / Module Quest</p>
+            <h1 class="page-title">모듈 퀘스트 체크</h1>
+            <p class="page-sub">일일 퀘스트는 매일 0시, 주간 퀘스트는 매주 화요일 오전 8시(한국 시간)에 자동으로 초기화됩니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="panel">
+                <h2 class="section-title">일일 퀘스트 <span class="result-count" id="dailyCount"></span></h2>
+                <p class="panel-desc" id="dailySub"></p>
+                <div class="quest-totals" id="dailyTotals"></div>
+                <div class="quest-list" id="dailyList"></div>
+            </div>
+
+            <div class="panel">
+                <div class="quest-head">
+                    <h2 class="section-title">주간 퀘스트 <span class="result-count" id="weeklyCount"></span></h2>
+                    <button type="button" id="weeklyReset" class="reset-btn">주간 초기화</button>
+                </div>
+                <ul class="quest-timeline mono" id="resetTimeline"></ul>
+                <div class="quest-totals" id="weeklyTotals"></div>
+                <div class="quest-list" id="weeklyList"></div>
+            </div>
+
+            <p class="quest-note">체크 기록은 이 브라우저에만 저장됩니다.</p>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
+
+    <script type="module" src="../js/quest/main.js"></script>
+</body>
+</html>
