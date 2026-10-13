@@ -29,6 +29,13 @@ function gradeClass(grade) {
     return 'grade-' + grade.replace('+', 'plus');
 }
 
+// 모듈 합성 비용 (M 단위, 1T = 1000M)
+function formatBit(m) {
+    const t = Math.floor(m / 1000), rest = m % 1000;
+    if (!t) return `${rest}M`;
+    return rest ? `${t.toLocaleString()}T ${rest}M` : `${t.toLocaleString()}T`;
+}
+
 function formatProb(p) {
     return Number(p).toFixed(2) + '%';
 }
@@ -97,6 +104,9 @@ function renderPool() {
     }
     if (currentCat === 'fusion' || currentCat === 'module') {
         metaParts.unshift(`${pool.inputGrade} ${pool.inputCount}개 → 1개`);
+    }
+    if (currentCat === 'module') {
+        metaParts.splice(1, 0, `비용 ${formatBit(pool.cost)}`);
     }
     poolMeta.textContent = metaParts.filter(Boolean).join(' · ');
     rateCount.textContent = `(${items.length}종)`;

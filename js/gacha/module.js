@@ -2,14 +2,12 @@ import { loadTheme, toggleTheme } from '../theme.js';
 import { moduleFusions } from './moduleData.js';
 import { GRADES as BOX_TYPES, DAILY, WEEKLY } from '../quest/questData.js';
 import { flipCardWrap, revealAllRowHTML, setupFlip } from './flipCard.js';
-import { createUpgrader } from './upgrade.js';
 
 const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
 const FUSION_BATCH_SIZE = 10;
 const STORAGE_KEY = 'dmokit_module';
 // 등급 상자에서 나올 수 있는 등급 (모두 동일 확률 가정)
 const BOX_GRADES = { NA: ['N', 'A', 'A+'], S: ['S', 'S+'], SP: ['S+', 'SS'], SS: ['SS', 'SS+'] };
-const maybeUpgrade = createUpgrader(moduleFusions);
 
 const el = id => document.getElementById(id);
 const boxList = el('boxList');
@@ -32,9 +30,9 @@ let currentMode = 'auto';
 function load() {
     try {
         const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (s && s.boxes && s.items) return s;
+        if (s && s.boxes && s.items) return { spent: 0, ...s };
     } catch {}
-    return { boxes: {}, items: {} };
+    return { boxes: {}, items: {}, spent: 0 };
 }
 let state = load();
 function save() {
@@ -50,6 +48,12 @@ function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
+}
+// 비용은 M 단위로 들고 있다 (1T = 1000M)
+function formatBit(m) {
+    const t = Math.floor(m / 1000), rest = m % 1000;
+    if (!t) return `${rest}M`;
+    return rest ? `${t.toLocaleString()}T ${rest}M` : `${t.toLocaleString()}T`;
 }
 const pickUniform = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -130,9 +134,11 @@ function fuseOnce() {
     for (const group of activeFusions()) {
         if (countOfGrade(group.inputGrade) < group.inputCount) continue;
         consumeGrade(group.inputGrade, group.inputCount);
-        const result = maybeUpgrade(pullOne(group.results), group.results);
+        const result = pullOne(group.results);
         addItem(result.name, result.grade);
-        return result;
+        state.spent += group.cost;
+        // 확률표의 상위 등급 40% 가 곧 등급업 확률이다 (추가 등급업 없음)
+        return { ...result, cost: group.cost, upgraded: result.grade !== group.inputGrade };
     }
     return null;
 }
@@ -154,13 +160,15 @@ function fuse(limit) {
     render();
 }
 
+const sumCost = results => results.reduce((s, r) => s + r.cost, 0);
+
 function renderCards(results, requested) {
-    let suffix = `(${results.length}회 합성)`;
+    let suffix = `(${results.length}회 합성 · 비용 ${formatBit(sumCost(results))})`;
     if (requested > results.length) suffix += ` · 재료 부족으로 ${requested - results.length}회 중단`;
     fusionResultCount.textContent = suffix;
     const cards = results.length > 1 ? [revealAllRowHTML()] : [];
     for (const r of results) {
-        cards.push(flipCardWrap(buildFlipBack(r), gradeClass(r.grade), r._upgraded ? 'upgraded' : ''));
+        cards.push(flipCardWrap(buildFlipBack(r), gradeClass(r.grade)));
     }
     fusionResultGrid.innerHTML = cards.join('');
     setupFlip(fusionResultGrid);
@@ -174,16 +182,12 @@ function renderCards(results, requested) {
 function buildFlipBack(it) {
     const face = (grade, name) => `<span class="r-grade">${escapeHtml(grade)}</span>
             <span class="r-name">${escapeHtml(name)}</span>`;
-    if (!it._upgraded) return face(it.grade, it.name);
-    return `<div class="back-stage back-stage-original ${gradeClass(it._orig.grade)}">${face(it._orig.grade, it._orig.name)}</div>
-        <div class="back-stage back-stage-upgraded ${gradeClass(it.grade)}">${face(it.grade, it.name)}
-            <span class="upgrade-tag">⬆ 등급업</span>
-        </div>`;
+    return face(it.grade, it.name) + (it.upgraded ? '<span class="upgrade-tag">⬆ 등급업</span>' : '');
 }
 
 function renderSummary(results) {
-    const upgraded = results.filter(r => r._upgraded).length;
-    fusionResultCount.textContent = `(${results.length.toLocaleString()}회 합성 · 등급업 ${upgraded.toLocaleString()}회)`;
+    const upgraded = results.filter(r => r.upgraded).length;
+    fusionResultCount.textContent = `(${results.length.toLocaleString()}회 합성 · 등급업 ${upgraded.toLocaleString()}회 · 비용 ${formatBit(sumCost(results))})`;
     const byGrade = {};
     for (const r of results) byGrade[r.grade] = (byGrade[r.grade] || 0) + 1;
     fusionResultGrid.innerHTML = `<div class="stat-grade-list">${gradeChips(byGrade)}</div>`;
@@ -207,9 +211,14 @@ function renderBoxes() {
 
 function renderFusionAvail() {
     let possible = 0;
-    for (const g of activeFusions()) possible += Math.floor(countOfGrade(g.inputGrade) / g.inputCount);
+    let next = null;
+    for (const g of activeFusions()) {
+        const n = Math.floor(countOfGrade(g.inputGrade) / g.inputCount);
+        if (n && !next) next = g;
+        possible += n;
+    }
     fuse10Btn.disabled = fuseAllBtn.disabled = possible === 0;
-    fusionAvail.textContent = possible > 0 ? `현재 재료로 ${possible}회 합성 가능` : '합성 가능한 모듈이 없습니다.';
+    fusionAvail.textContent = possible > 0 ? `현재 재료로 ${possible}회 합성 가능 · 다음 합성: ${next.inputGrade} (${formatBit(next.cost)})` : '합성 가능한 모듈이 없습니다.';
 }
 
 function renderInventory() {
@@ -218,7 +227,7 @@ function renderInventory() {
     const counts = {};
     for (const it of items) counts[it.grade] = (counts[it.grade] || 0) + it.count;
     const total = items.reduce((s, it) => s + it.count, 0);
-    invCount.textContent = `모듈: ${total.toLocaleString()}개`;
+    invCount.textContent = `모듈: ${total.toLocaleString()}개 · 누적 비용 ${formatBit(state.spent)}`;
     invSummary.innerHTML = items.length ? gradeChips(counts) : '<span class="empty-msg-inline">모듈 없음</span>';
     invGrid.innerHTML = items.length
         ? items.map(it => `<div class="inv-item ${gradeClass(it.grade)}">
@@ -243,7 +252,7 @@ fuse10Btn.addEventListener('click', () => fuse(FUSION_BATCH_SIZE));
 fuseAllBtn.addEventListener('click', () => fuse(Infinity));
 el('clearInvBtn').addEventListener('click', () => {
     if (!confirm('상자와 모듈 인벤토리를 모두 초기화합니다. 계속하시겠습니까?')) return;
-    state = { boxes: {}, items: {} };
+    state = { boxes: {}, items: {}, spent: 0 };
     save();
     openSummary.innerHTML = '';
     render();

@@ -1,11 +1,13 @@
 // 디지털 융합(모듈) - 같은 등급 모듈 inputCount개 → results 중 1개 (가중 랜덤). 천장 없음.
 // [지급용] 은 일반과 별개 아이템이지만 같은 등급 재료로 취급한다.
+// cost: 1회 합성 비용 (M 단위, 1T = 1000M)
 
 export const moduleFusions = [
     {
         name: "N 등급 합성",
         inputGrade: "N",
         inputCount: 4,
+        cost: 500,
         results: [
             { probability: 6.0, name: "공격형 모듈 [N]", grade: "N" },
             { probability: 14.0, name: "공격형 모듈 [N] [지급용]", grade: "N" },
@@ -25,6 +27,7 @@ export const moduleFusions = [
         name: "A 등급 합성",
         inputGrade: "A",
         inputCount: 4,
+        cost: 1000,
         results: [
             { probability: 6.0, name: "공격형 모듈 [A]", grade: "A" },
             { probability: 14.0, name: "공격형 모듈 [A] [지급용]", grade: "A" },
@@ -44,6 +47,7 @@ export const moduleFusions = [
         name: "A+ 등급 합성",
         inputGrade: "A+",
         inputCount: 4,
+        cost: 1500,
         results: [
             { probability: 6.0, name: "공격형 모듈 [A+]", grade: "A+" },
             { probability: 14.0, name: "공격형 모듈 [A+] [지급용]", grade: "A+" },
@@ -63,6 +67,7 @@ export const moduleFusions = [
         name: "S 등급 합성",
         inputGrade: "S",
         inputCount: 4,
+        cost: 3000,
         results: [
             { probability: 6.0, name: "공격형 모듈 [S]", grade: "S" },
             { probability: 14.0, name: "공격형 모듈 [S] [지급용]", grade: "S" },
@@ -82,6 +87,7 @@ export const moduleFusions = [
         name: "S+ 등급 합성",
         inputGrade: "S+",
         inputCount: 4,
+        cost: 5000,
         results: [
             { probability: 6.0, name: "공격형 모듈 [S+]", grade: "S+" },
             { probability: 14.0, name: "공격형 모듈 [S+] [지급용]", grade: "S+" },
@@ -109,6 +115,7 @@ export const moduleFusions = [
         name: "SS 등급 합성",
         inputGrade: "SS",
         inputCount: 4,
+        cost: 10000,
         results: [
             { probability: 0.86, name: "공격형 모듈 CT [SS]", grade: "SS" },
             { probability: 7.72, name: "공격형 모듈 CT [SS] [지급용]", grade: "SS" },
@@ -144,6 +151,7 @@ export const moduleFusions = [
         name: "SS+ 등급 합성",
         inputGrade: "SS+",
         inputCount: 4,
+        cost: 25000,
         results: [
             { probability: 0.86, name: "공격형 모듈 CT [SS+]", grade: "SS+" },
             { probability: 7.72, name: "공격형 모듈 CT [SS+] [지급용]", grade: "SS+" },
@@ -179,6 +187,7 @@ export const moduleFusions = [
         name: "SSS 등급 합성",
         inputGrade: "SSS",
         inputCount: 4,
+        cost: 50000,
         results: [
             { probability: 0.86, name: "공격형 모듈 CT [SSS]", grade: "SSS" },
             { probability: 7.72, name: "공격형 모듈 CT [SSS] [지급용]", grade: "SSS" },
@@ -222,6 +231,7 @@ export const moduleFusions = [
         name: "SSS+ 등급 합성",
         inputGrade: "SSS+",
         inputCount: 4,
+        cost: 100000,
         results: [
             { probability: 0.6, name: "공격형 모듈 CT [SSS+]", grade: "SSS+" },
             { probability: 5.4, name: "공격형 모듈 CT [SSS+] [지급용]", grade: "SSS+" },
