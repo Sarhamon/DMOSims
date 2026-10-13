@@ -73,6 +73,7 @@
             </div>
 
             <div class="panel">
+                <h3 class="section-title">10회 융합</h3>
                 <div class="fusion-controls">
                     <div class="buff-group-buttons">
                         <label class="buff-toggle">
@@ -94,11 +95,36 @@
 
                     <div class="mode-pane">
                         <button class="calc-btn" id="fuse10Btn">10회 합성</button>
-                        <button class="calc-btn secondary" id="fuseAllBtn">가능한 만큼 합성</button>
                         <label class="auto-reveal-label">
                             <input type="checkbox" id="autoRevealCheck"> 자동 공개
                         </label>
                     </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">목표 융합</h3>
+                <p class="panel-desc">목표 모듈 1개가 나올 때까지 목표 등급 이하를 낮은 등급부터 합성합니다. 재료가 떨어지면 1주치(일일 ×7 + 주간) 상자를 자동으로 받아 엽니다.</p>
+                <div class="mode-pane target-pane">
+                    <div class="draw-selector">
+                        <label for="targetGrade">목표 등급</label>
+                        <select id="targetGrade">
+                            <option value="U">U</option>
+                            <option value="SSS+">SSS+</option>
+                            <option value="SSS">SSS</option>
+                            <option value="SS+">SS+</option>
+                            <option value="SS">SS</option>
+                            <option value="S+">S+</option>
+                            <option value="S">S</option>
+                            <option value="A+">A+</option>
+                            <option value="A">A</option>
+                        </select>
+                    </div>
+                    <div class="draw-selector">
+                        <label for="targetOption">목표 옵션</label>
+                        <select id="targetOption"></select>
+                    </div>
+                    <button class="calc-btn" id="fuseTargetBtn">목표까지 합성</button>
                 </div>
             </div>
 
