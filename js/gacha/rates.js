@@ -2,6 +2,7 @@ import { loadTheme, toggleTheme } from '../theme.js';
 import { draws } from './drawData.js';
 import { summons, tierLabel } from './summonData.js';
 import { fusions } from './fusionData.js';
+import { moduleFusions } from './moduleData.js';
 
 const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
 
@@ -35,11 +36,12 @@ function formatProb(p) {
 function getPools(cat) {
     if (cat === 'draw') return draws;
     if (cat === 'summon') return summons;
+    if (cat === 'module') return moduleFusions;
     return fusions;
 }
 
 function getItems(pool, cat) {
-    if (cat === 'fusion') return pool.results;
+    if (cat === 'fusion' || cat === 'module') return pool.results;
     return pool.items;
 }
 
@@ -93,7 +95,7 @@ function renderPool() {
     if (currentCat === 'draw' && pool.pullCount) {
         metaParts.unshift(`1회당 ${pool.pullCount}개`);
     }
-    if (currentCat === 'fusion') {
+    if (currentCat === 'fusion' || currentCat === 'module') {
         metaParts.unshift(`${pool.inputGrade} ${pool.inputCount}개 → 1개`);
     }
     poolMeta.textContent = metaParts.filter(Boolean).join(' · ');

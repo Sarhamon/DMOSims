@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DMOKit - 디지털 융합(모듈) 시뮬레이터</title>
+    <script>
+        if (localStorage.getItem('dmo_theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+    <link rel="icon" type="image/png" href="../../img/dmo.png">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/tool.css">
+    <link rel="stylesheet" href="../../css/app.css">
+    <meta property="og:title" content="DMOKit - 디지털 융합(모듈) 시뮬레이터">
+    <meta property="og:description" content="디지몬 마스터즈 모듈 합성 - 일일/주간 퀘스트 보상으로 모듈을 모아 합성">
+    <meta property="og:image" content="../../img/dmo.png">
+</head>
+<body>
+
+    <div class="bg-grid" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="shell">
+            <nav class="crumbs" aria-label="위치">
+                <a class="brand" href="../../">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7Z"/>
+                        <path d="M12 7.6 16.4 10v4L12 16.4 7.6 14v-4Z" fill="currentColor" stroke="none"/>
+                    </svg>
+                    <span class="brand-name">DMOKIT</span>
+                </a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <a class="crumb-link mono" href="../">Gacha</a>
+                <span class="crumb-sep mono" aria-hidden="true">/</span>
+                <span class="crumb-current mono" aria-current="page">Module</span>
+            </nav>
+            <div class="topbar-meta">
+                <span class="status mono"><i class="dot"></i>System Online</span>
+                <button class="theme-toggle" aria-label="다크모드로 전환" aria-pressed="false">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-head shell">
+            <p class="eyebrow mono">Gacha 05 / Digital Fusion</p>
+            <h1 class="page-title">디지털 융합(모듈) 시뮬레이터</h1>
+            <p class="page-sub">모듈 퀘스트 보상으로 등급 상자를 받아 열고, 같은 등급 모듈 4개를 1개로 합성합니다.</p>
+        </div>
+
+        <div class="views shell">
+            <div class="inv-bar">
+                <span id="invCount">모듈: 0개</span>
+                <a href="../../quest/" class="inv-link">모듈 퀘스트 체크 →</a>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">재료 수급</h3>
+                <p class="panel-desc">일일 1회분: <span id="dailyReward"></span><br>주간 1회분: <span id="weeklyReward"></span><br>
+                    상자는 범위 안의 등급이 모두 같은 확률로 나오고, 공격형 · 방어형 · 보조형 중 하나가 무작위로 나온다고 가정합니다. 보상은 [지급용] 모듈입니다.</p>
+                <div class="mode-pane">
+                    <button class="calc-btn secondary" id="grantDailyBtn">일일 보상 받기</button>
+                    <button class="calc-btn secondary" id="grantWeeklyBtn">주간 보상 받기</button>
+                    <button class="calc-btn secondary" id="grantWeekBtn">1주치 받기 (일일 ×7 + 주간)</button>
+                </div>
+                <div class="quest-totals" id="boxList" style="margin-top:16px"></div>
+                <div class="mode-pane">
+                    <button class="calc-btn" id="openBoxesBtn">상자 모두 열기</button>
+                    <div class="stat-grade-list" id="openSummary"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="fusion-controls">
+                    <div class="buff-group-buttons">
+                        <label class="buff-toggle">
+                            <input type="radio" name="fusion-mode" value="auto" class="buff-check" checked>
+                            <span class="buff-toggle-name">자동</span>
+                        </label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="N" class="buff-check"><span class="buff-toggle-name">N</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="A" class="buff-check"><span class="buff-toggle-name">A</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="A+" class="buff-check"><span class="buff-toggle-name">A+</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="S" class="buff-check"><span class="buff-toggle-name">S</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="S+" class="buff-check"><span class="buff-toggle-name">S+</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="SS" class="buff-check"><span class="buff-toggle-name">SS</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="SS+" class="buff-check"><span class="buff-toggle-name">SS+</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="SSS" class="buff-check"><span class="buff-toggle-name">SSS</span></label>
+                        <label class="buff-toggle"><input type="radio" name="fusion-mode" value="SSS+" class="buff-check"><span class="buff-toggle-name">SSS+</span></label>
+                    </div>
+
+                    <div class="fusion-avail" id="fusionAvail"></div>
+
+                    <div class="mode-pane">
+                        <button class="calc-btn" id="fuse10Btn">10회 합성</button>
+                        <button class="calc-btn secondary" id="fuseAllBtn">가능한 만큼 합성</button>
+                        <label class="auto-reveal-label">
+                            <input type="checkbox" id="autoRevealCheck"> 자동 공개
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 class="section-title">최근 결과 <span class="result-count" id="fusionResultCount"></span></h3>
+                <div class="result-grid" id="fusionResultGrid">
+                    <div class="empty-msg">합성 버튼을 눌러주세요. 자동은 낮은 등급부터 합성합니다.</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="inv-header">
+                    <h3 class="section-title">모듈 인벤토리</h3>
+                    <button class="calc-btn secondary" id="clearInvBtn">인벤토리 비우기</button>
+                </div>
+                <div class="inv-section">
+                    <div class="inv-summary" id="invSummary">—</div>
+                    <div class="inv-grid" id="invGrid"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="shell">
+            <span>&copy; 2026 오메가몬 서버 우람</span>
+            <span class="en">Built for DMO players</span>
+        </div>
+    </footer>
+
+    <script type="module" src="../../js/gacha/module.js"></script>
+</body>
+</html>
