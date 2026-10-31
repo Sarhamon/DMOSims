@@ -199,12 +199,14 @@ def main():
     unused = [k for k in csv_members if k not in used]
 
     # 덱 종류에 박힌 U 수 — "머시풀 1U 파피몬쪽" 처럼 끝이 아닌 자리에 오기도 한다
+    # 리포트의 덱 종류는 U 아닌 디지몬까지 세기도 해서(새로운 디지털월드의 모험) CSV 쪽을 따른다
     decks = []
-    for name, typ in deck_key:
+    for name, rep_typ in deck_key:
+        ck = csv_key((name, rep_typ))
+        typ = ck[1]
         m = U_RE.search(typ)
         if not m:
             errors.append(f"덱 종류에서 U 수를 못 읽음: {typ}")
-        ck = csv_key((name, typ))
         decks.append({"name": name, "type": typ, "u": int(m.group(1)) if m else 0,
                       "effects": csv_effects[ck], "members": csv_members.get(ck, [])})
 
