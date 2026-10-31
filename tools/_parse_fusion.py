@@ -16,7 +16,6 @@ inputGrade is parsed from group name "X 등급 합성" → "X".
 """
 import re
 import json
-import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent

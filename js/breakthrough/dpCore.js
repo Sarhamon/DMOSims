@@ -9,7 +9,6 @@ import { CELLS, STAGE_TABLE, PROB_MIN, PROB_MAX } from './breakthroughData.js';
 
 const NPOS = 11 * 11 * 11 * 11 * 11; // 161051
 const idx = (p0, p1, p2, p3, p4) => ((((p0 * 11 + p1) * 11 + p2) * 11 + p3) * 11 + p4);
-export const probIdx = prob => (prob - 25) / 10;
 
 // 기대값이 사실상 동률(노이즈)일 때 증가행 우선 추천하기 위한 허용오차.
 const TIE_EPS = 0.005;
@@ -28,7 +27,7 @@ export function makeInfos(opts) {
 }
 const rangeNorm = (info, a, b) => (info.prefix[b] - info.prefix[a]) / info.den;
 
-// 전역 최적 가치표 빌드. 반환: Float64Array[NPOS*6], V[idx*6 + probIdx].
+// 전역 최적 가치표 빌드. 반환: Float64Array[NPOS*6], V[idx*6 + (prob-25)/10].
 // 위치합 내림차순(각 좌표 10→0 중첩) = 자식(한 좌표 더 큼)이 먼저 채워지는 위상순서.
 export function buildDP(opts) {
     const infos = makeInfos(opts);
