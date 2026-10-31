@@ -1,11 +1,10 @@
 """
 Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/data/dNN-M.js
 
-리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(5/10/15분), 그 안에 덱 블록이 들어 있다.
+리포트 1개 = 디지몬 1마리 × 전투 시간 1구간(2/10분), 그 안에 덱 블록이 들어 있다.
 덱 목록은 리포트 전체를 합쳐 reportMeta.js 에 한 번만 담고,
 디지몬·구간별 결과는 data/dNN-M.js 로 쪼개 화면에서 그때그때 불러 쓴다.
-덱이 새로 생긴 뒤 다시 안 돌린 리포트가 있으면, 옵션이 같은 덱의 결과를 그대로 쓴다(from 에 출처).
-그런 덱조차 없으면 그 자리는 null 이 된다.
+리포트에 없는 덱 자리는 null 이 된다.
 
 파일명을 dNN 으로 두는 이유: 디지몬 이름에 콜론(라스트 에볼루션: 인연)이 들어가 파일명으로 못 쓴다.
 뒤의 M 은 전투 시간(분)이다.
@@ -22,7 +21,8 @@ OUT_META = HERE.parent / "js" / "report" / "reportMeta.js"
 OUT_DATA = HERE.parent / "js" / "report" / "data"
 
 HEAD_RE = re.compile(r'^전투 (\d+)초 .*?스킬포인트 (\d+)점')
-DECK_RE = re.compile(r'^\[덱 (\d+)/(\d+)\] (.+?) \((.+?)\)\s+스뎀 \+(\d+)% \(자버프와 합연산\), 최종 x([\d.]+), 공격력 \+(\d+)%')
+DECK_RE = re.compile(r'^\[덱 (\d+)/(\d+)\] (.+?) \((.+?)\)\s+실측 배수: (.+)$')
+MULT_RE = re.compile(r'(\d)스 ([+-][\d.]+)%')
 SP_RE = re.compile(r'\[ 스킬포인트 투자 추천 \]\s+(\d+) / (\d+) 점 사용')
 SKILL_RE = re.compile(r'^\s*(\d)스 (.+?)\s+Lv\.(\d+)\s+(\d+)점\s+계수\s+([\d,]+)\s+(\d+)회\s+딜지분\s+([\d.]+)%')
 SKILL_OFF_RE = re.compile(r'^\s*(\d)스 (.+?)\s+Lv\.(\d+)\s+투자 X')
@@ -86,7 +86,7 @@ def parse_report(path):
         m = DECK_RE.match(l)
         if m:
             cur = {"deck": m.group(3), "type": m.group(4),
-                   "sdem": int(m.group(5)), "fin": float(m.group(6)), "atk": int(m.group(7)),
+                   "mult": [{"slot": int(a), "pct": float(b)} for a, b in MULT_RE.findall(m.group(5))],
                    "skills": [], "opening": [], "steady": [], "priority": [], "builds": []}
             blocks.append(cur)
             continue
@@ -124,7 +124,7 @@ def parse_report(path):
         for key in ("spUsed", "total", "dps", "uptime", "idle"):
             if key not in b:
                 errors.append(f"{name} 덱 {i}: {key} 없음")
-        for key in ("skills", "opening", "priority", "builds"):
+        for key in ("mult", "skills", "opening", "priority", "builds"):
             if not b[key]:
                 errors.append(f"{name} 덱 {i}: {key} 비어 있음")
 
@@ -165,59 +165,48 @@ def main():
     # 덱 집합은 리포트마다 다를 수 있다 — 디지몬이 늘면 덱도 같이 늘어난다.
     # 첫 리포트 순서를 기준으로 삼고 거기 없는 덱은 뒤에 붙여 기준 순서를 만든다.
     # 각 리포트의 결과를 그 순서로 다시 늘어놓고, 결과가 없는 덱 자리는 None 으로 둔다.
-    ref, deck_key = {}, []
+    # deck.csv 가 U등급 덱 목록이다. 거기 없는 덱은 U등급이 아니므로 빼 둔다.
+    # 리포트의 덱 종류가 CSV 와 다르게 적히기도 해서(엔젤우몬 1U 두 덱을 CSV 에서만 구분)
+    # (덱 이름, 덱 종류) 가 그대로 없으면 덱 이름이 하나뿐인 행으로 찾는다.
+    csv_effects = parse_decks_csv()
+    by_deck_name = {}
+    for ck in csv_effects:
+        by_deck_name.setdefault(ck[0], []).append(ck)
+
+    def csv_key(k):
+        if k in csv_effects:
+            return k
+        same = by_deck_name.get(k[0], [])
+        return same[0] if len(same) == 1 else None
+
+    deck_key, excluded = [], []
     for r in reports:
         for b in r["blocks"]:
             k = (b["deck"], b["type"])
-            if k not in ref:
-                ref[k] = b
-                deck_key.append(k)
+            if k in deck_key or k in excluded:
+                continue
+            (deck_key if csv_key(k) else excluded).append(k)
     for r in reports:
         by_key = {(b["deck"], b["type"]): b for b in r["blocks"]}
         if len(by_key) != len(r["blocks"]):
             errors.append(f"{r['name']}: 같은 덱이 두 번 나옴")
             continue
-        for k, b in by_key.items():
-            if (b["sdem"], b["fin"], b["atk"]) != (ref[k]["sdem"], ref[k]["fin"], ref[k]["atk"]):
-                errors.append(f"{r['name']} / {k[0]}: 스뎀·최종·공격력이 기준 리포트와 다름")
         r["blocks"] = [by_key.get(k) for k in deck_key]
 
-    # 덱이 결과에 미치는 입력은 (스뎀, 최종, 공격력) 세 개뿐이다 — 전 리포트 999쌍 전수 확인.
-    # 그래서 리포트에 없는 덱은 그 세 값이 같은 덱의 결과를 그대로 쓸 수 있다.
-    # 어디서 가져왔는지 from 에 남겨 화면에서 알려 준다. 가져올 덱이 없으면 None 으로 남는다.
-    for r in reports:
-        twin = {}
-        for b in r["blocks"]:
-            if b is not None:
-                twin.setdefault((b["sdem"], b["fin"], b["atk"]), b)
-        for i, (k, b) in enumerate(zip(deck_key, r["blocks"])):
-            if b is not None:
-                continue
-            d = ref[k]
-            src = twin.get((d["sdem"], d["fin"], d["atk"]))
-            if src is not None:
-                r["blocks"][i] = dict(src, **{"from": src["deck"]})
-
-    csv_effects = parse_decks_csv()
-    for k in deck_key:
-        if k not in csv_effects:
-            errors.append(f"deck.csv 에 없는 덱: {k[0]} ({k[1]})")
-
+    # deck_members.csv 는 리포트에서 빠진 덱까지 담고 있을 수 있어 경고만 한다
     csv_members = parse_members_csv()
-    for k in csv_members:
-        if k not in deck_key:
-            errors.append(f"deck_members.csv 의 덱을 리포트에서 못 찾음: {k[0]} ({k[1]})")
+    used = {csv_key(k) for k in deck_key}
+    unused = [k for k in csv_members if k not in used]
 
     # 덱 종류에 박힌 U 수 — "머시풀 1U 파피몬쪽" 처럼 끝이 아닌 자리에 오기도 한다
     decks = []
-    for b in (ref[k] for k in deck_key):
-        m = U_RE.search(b["type"])
+    for name, typ in deck_key:
+        m = U_RE.search(typ)
         if not m:
-            errors.append(f"덱 종류에서 U 수를 못 읽음: {b['type']}")
-        decks.append({"name": b["deck"], "type": b["type"], "u": int(m.group(1)) if m else 0,
-                      "sdem": b["sdem"], "fin": b["fin"], "atk": b["atk"],
-                      "effects": csv_effects.get((b["deck"], b["type"]), []),
-                      "members": csv_members.get((b["deck"], b["type"]), [])})
+            errors.append(f"덱 종류에서 U 수를 못 읽음: {typ}")
+        ck = csv_key((name, typ))
+        decks.append({"name": name, "type": typ, "u": int(m.group(1)) if m else 0,
+                      "effects": csv_effects[ck], "members": csv_members.get(ck, [])})
 
     # 머리말 안내는 구간이 달라도 같다(위에서 확인)
     notes_of = {r["name"]: r["notes"] for r in reports}
@@ -246,7 +235,7 @@ def main():
         for sec in durations:
             body = [None if b is None else
                     {k: v for k, v in b.items()
-                     if k not in ("deck", "type", "sdem", "fin", "atk")}
+                     if k not in ("deck", "type")}
                     for b in by_pair[(nm, sec)]["blocks"]]
             (OUT_DATA / f"{d['file']}-{sec // 60}.js").write_text(
                 banner + f"// {nm} · {sec // 60}분\n\nexport default {dump(body)};\n",
@@ -260,16 +249,14 @@ def main():
     print(f"  {OUT_META}")
     print(f"  {OUT_DATA}\\d01-{durations[0] // 60}.js ~ d{len(digimon):02d}-{durations[-1] // 60}.js")
 
-    # 옵션이 같은 덱에서 가져온 결과를 알려 준다
-    derived = {}
-    for nm in names:
-        for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]):
-            if b is not None and "from" in b:
-                derived.setdefault((k[0], b["from"]), []).append(nm)
-    for (dk, src), nms in derived.items():
-        print(f"덱 결과 가져옴: {dk} ← {src} ({len(nms)}마리)")
+    for k in excluded:
+        print(f"deck.csv 에 없어 뺀 덱: {k[0]} ({k[1]})")
+    if unused:
+        print(f"deck_members.csv 에만 있고 리포트에 없는 덱 {len(unused)}개 (무시)")
+        for k in unused:
+            print(f"  {k[0]} ({k[1]})")
 
-    # 가져올 덱조차 없어 빈 자리로 남은 덱. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
+    # 결과가 없어 빈 자리로 남은 덱. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
     holes = {}
     for nm in names:
         gaps = tuple(k[0] for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]) if b is None)

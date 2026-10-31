@@ -48,8 +48,10 @@ const effChips = (deck) => deck.effects
     .map(([cond, eff]) => `<span class="eff-chip"><b>${esc(eff)}</b>${cond === '상시' ? '' : `<i>${esc(cond)}</i>`}</span>`)
     .join('');
 
-/* 리포트에 없던 덱은 옵션(스뎀·최종 배수·공격력)이 같은 덱의 결과를 그대로 쓴다 */
-const fromChip = (src) => `<span class="eff-chip from"><b>가져온 결과</b><i>${esc(src)}</i></span>`;
+/* 덱이 이 디지몬 스킬에 실제로 준 배수. 디지몬 · 전투 시간마다 다르다 */
+const multChips = (r) => r.mult
+    .map((x) => `<span class="eff-chip"><b>+${x.pct.toFixed(1)}%</b><i>${x.slot}스 실측 배수</i></span>`)
+    .join('');
 
 /* 덱을 채우는 디지몬. 보고 있는 디지몬은 강조한다.
    아직 안 채운 덱은 덱 종류를 대신 보여준다.
@@ -147,7 +149,7 @@ function renderDecks() {
                     <h3 class="module-title">${deckTitle(deck.name)}</h3>
                 </span>
                 <p class="module-desc deck-meta mono">${deckSub(deck)}</p>
-                <div class="deck-effs">${effChips(deck)}${r.from ? fromChip(r.from) : ''}</div>
+                <div class="deck-effs">${effChips(deck)}</div>
             </button>`).join('')}
         </div>`;
 }
@@ -228,9 +230,8 @@ function renderDetail() {
             <select id="deckSel" aria-label="덱 선택">${order
                 .map(({ deck: d, i }) => `<option value="${i}"${i === deckIdx ? ' selected' : ''}>${d.u}U · ${esc(d.name)}</option>`)
                 .join('')}</select>
-            ${deck.atk ? `<p class="deck-meta mono">공격력 +${deck.atk}%</p>` : ''}
             <div class="deck-effs">${effChips(deck)}</div>
-            ${r.from ? `<p class="rp-note">이 덱은 ${esc(picked)} 리포트에 없어, 옵션이 같은 <b>${esc(r.from)}</b> 의 결과를 그대로 썼습니다. 스뎀 &middot; 최종 배수 &middot; 공격력이 같은 덱은 결과가 동일합니다.</p>` : ''}
+            <div class="deck-effs">${multChips(r)}</div>
             <dl class="hero-stats">
                 <div><dt class="mono">총 딜</dt><dd>${n(r.total)}</dd></div>
                 <div><dt class="mono">DPS</dt><dd>${n(r.dps)}</dd></div>
@@ -310,6 +311,11 @@ function readHash() {
     if (next !== picked) { picked = next; rows = null; }
 
     const t = Number(p.get('t'));
+    /* 없어진 전투 시간(예전 5 · 15분 링크의 t=300 · 900)은 주소에서 지운다 */
+    if (p.has('t') && !meta.durations.includes(t)) {
+        p.delete('t');
+        history.replaceState(null, '', `${location.pathname}${location.search}${p.size ? `#${p}` : ''}`);
+    }
     const nextDur = meta.durations.includes(t) ? t : meta.durations[0];
     if (nextDur !== dur) { dur = nextDur; rows = null; }
 
