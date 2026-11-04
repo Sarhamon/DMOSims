@@ -937,6 +937,7 @@ html.dark-mode .opt-tier-low  { color: #ff8787; }
 
 .bt-toolbar { display: flex; justify-content: flex-end; }
 .bt-toolbar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.bt-toolbar-btns .reset-btn.is-on { color: var(--accent-ink); border-color: var(--accent); background: var(--accent-wash); }
 
 .bt-rows { display: flex; flex-direction: column; gap: 10px; }
 .bt-row {

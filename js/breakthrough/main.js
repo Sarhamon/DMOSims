@@ -25,6 +25,11 @@ let rec = { best: -1, stop: false };
 // 결과 입력 대기 중인 행 index (null이면 없음). 인게임 결과를 직접 체크받는다.
 let pending = null;
 
+// 연습 모드: 행 클릭 시 확률대로 즉시 굴림. 실제 진행(realSim)은 따로 보관하고 저장/주사위에 반영 안 함.
+let practice = false;
+let realSim = null;
+let lastRoll = ''; // 연습 모드 직전 결과 메시지
+
 // 상태(시뮬 진행 + 주사위 + 가격)를 localStorage에 저장해 새로고침해도 유지.
 // 1 랜덤 능력치 = 주사위 1개. 가격은 비트 단위.
 const STORAGE_KEY = 'dmo_breakthrough';
@@ -42,14 +47,16 @@ let dice = store.dice ?? 0;
 let price = { t: store.price?.t ?? 0, m: store.price?.m ?? 0, b: store.price?.b ?? 0 };
 
 function save() {
+    // 연습 중엔 실제 진행(realSim)을 저장
+    const s = practice ? realSim : sim;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         price,
         dice,
-        sim: sim && {
-            count: sim.count,
-            prob: sim.prob,
+        sim: s && {
+            count: s.count,
+            prob: s.prob,
             // opt는 kind+name으로만 저장 → 로딩 시 풀에서 재연결
-            rows: sim.rows.map(r => ({
+            rows: s.rows.map(r => ({
                 kind: r.opt.kind, name: r.opt.name,
                 pos: r.pos, base: r.base, bonus: r.bonus, status: r.status,
             })),
@@ -112,7 +119,38 @@ function newSim(randomize) {
     });
     sim = { count: 0, prob: PROB_START, rows };
     pending = null;
+    lastRoll = '';
     render();
+}
+
+// 연습 모드: 현재 확률표대로 굴려 결과 반영 (난수 r < 3단계 → 3칸, < 3+2단계 → 2칸, < 총확률 → 1칸, 그 외 실패)
+function rollResult(i) {
+    const [s1, s2, s3] = STAGE_TABLE[sim.prob];
+    const r = Math.random() * 100;
+    const adv = r < s3 ? 3 : r < s3 + s2 ? 2 : r < s3 + s2 + s1 ? 1 : 0;
+    const row = sim.rows[i];
+    lastRoll = `${row.opt.kind === 'inc' ? '▲' : '▼'} ${row.opt.name}: ` +
+        (adv > 0 ? `${adv}단계 성공!` : '실패');
+    applyResult(i, adv);
+}
+
+// 연습 모드 토글. 진입 시 현재 옵션으로 새 연습판, 종료 시 실제 진행 복원.
+function togglePractice() {
+    practice = !practice;
+    const btn = document.getElementById('btPractice');
+    btn.classList.toggle('is-on', practice);
+    btn.setAttribute('aria-pressed', practice);
+    btn.textContent = practice ? '연습 종료' : '연습 모드';
+    if (practice) {
+        realSim = sim;
+        newSim(false);
+    } else {
+        sim = realSim;
+        realSim = null;
+        pending = null;
+        lastRoll = '';
+        render();
+    }
 }
 
 // 행 클릭 = 결과 입력 대기. 같은 행을 다시 누르면 취소.
@@ -155,8 +193,8 @@ function renderRow(row, i) {
     el.className = `bt-row bt-row--${row.opt.kind}`;
     if (rowActive) {
         el.classList.add('bt-row--active');
-        el.title = '눌러서 결과 입력';
-        el.onclick = () => askResult(i);
+        el.title = practice ? '눌러서 돌파 (연습)' : '눌러서 결과 입력';
+        el.onclick = () => (practice ? rollResult(i) : askResult(i));
     }
     if (i === pending) el.classList.add('bt-row--pending');
     if (i === rec.best) {
@@ -304,7 +342,8 @@ function render() {
     save();
 
     const allDone = sim.rows.every(r => r.pos >= CELLS);
-    hintEl.textContent = sim.count >= MAX_ATTEMPTS
+    const prefix = practice ? `[연습] ${lastRoll ? lastRoll + ' — ' : ''}` : '';
+    hintEl.textContent = prefix + (sim.count >= MAX_ATTEMPTS
         ? '돌파 시도 횟수를 모두 사용했습니다. (다시시도/랜덤 능력치로 초기화)'
         : allDone
             ? '모든 행이 완성되었습니다.'
@@ -316,11 +355,14 @@ function render() {
                         ? `기대값상 베스트: ${sim.rows[rec.best].opt.kind === 'inc' ? '▲' : '▼'} ${sim.rows[rec.best].opt.name} 행 (★ 표시)`
                         : rec.stop
                             ? '기대값상 지금 멈추는 게 이득입니다. (더 누르면 손해)'
-                            : '행을 클릭한 뒤 실제 돌파 결과(성공 칸 수/실패)를 입력하세요.';
+                            : practice
+                                ? '행을 클릭하면 확률에 따라 돌파합니다.'
+                                : '행을 클릭한 뒤 실제 돌파 결과(성공 칸 수/실패)를 입력하세요.');
 }
 
-// 랜덤 능력치 = 주사위 1개 소모 후 옵션 재추첨
-document.getElementById('btRandom').onclick = () => { dice++; newSim(true); };
+// 랜덤 능력치 = 주사위 1개 소모 후 옵션 재추첨 (연습 중엔 소모 안 함)
+document.getElementById('btRandom').onclick = () => { if (!practice) dice++; newSim(true); };
+document.getElementById('btPractice').onclick = togglePractice;
 document.getElementById('btRetry').onclick = () => newSim(false);
 document.getElementById('btDiceReset').onclick = () => { dice = 0; save(); updateCost(); };
 
