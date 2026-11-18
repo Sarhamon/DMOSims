@@ -1,4 +1,6 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { formatBits } from '../format.js';
+import { loadJSON, saveJSON } from '../storage.js';
 import { slots, CURRENCY } from './optionData.js';
 
 // 슬롯 좌표는 eqwind.png(1024×1061) 기준 중심점 퍼센트. 위치 보정은 x/y만 수정.
@@ -36,12 +38,8 @@ const STORAGE_KEY = 'dmo_option';
 const store = loadStore();
 
 function loadStore() {
-    try {
-        const o = JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
-        return { resume: o.resume ?? {}, snaps: o.snaps ?? {}, price: normalizePrice(o.price) };
-    } catch {
-        return { resume: {}, snaps: {}, price: normalizePrice() };
-    }
+    const o = loadJSON(STORAGE_KEY, {});
+    return { resume: o.resume ?? {}, snaps: o.snaps ?? {}, price: normalizePrice(o.price) };
 }
 
 // 가격은 그룹별(accessory=스톤 / equip=재봉틀)로 분리. 레거시(공유) 값은 양쪽에 복사.
@@ -52,9 +50,7 @@ function normalizePrice(p) {
     return { accessory: { ...zero(), ...p.accessory }, equip: { ...zero(), ...p.equip } };
 }
 
-function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-}
+const persist = () => saveJSON(STORAGE_KEY, store);
 
 function saveResume() {
     store.resume[sim.slotId] = {
@@ -168,16 +164,6 @@ function priceBits() {
     return p.t * 1_000_000 + p.m * 1000 + p.b;
 }
 
-function fmtBits(bits) {
-    const b = bits % 1000;
-    const m = Math.floor(bits / 1000) % 1000;
-    const t = Math.floor(bits / 1_000_000);
-    const parts = [];
-    if (t) parts.push(`${t}T`);
-    if (t || m) parts.push(`${m}M`);
-    parts.push(`${b}B`);
-    return parts.join(' ');
-}
 
 function rerollCost() {
     return cfg().lockCost[sim.locked.size];
@@ -333,7 +319,7 @@ function simBodyHtml(slotId) {
         </div>
         <div class="opt-cost">
             <span>${cur} <b id="optStones">${sim.stones}</b>개</span>
-            <span>총 비용 <b id="optTotal">${fmtBits(sim.stones * priceBits())}</b></span>
+            <span>총 비용 <b id="optTotal">${formatBits(sim.stones * priceBits())}</b></span>
             <button class="opt-save" id="optResetStones">사용 갯수 초기화</button>
         </div>
         <div class="opt-saved">
@@ -347,7 +333,7 @@ function simBodyHtml(slotId) {
 
 function updateCost() {
     document.getElementById('optStones').textContent = sim.stones;
-    document.getElementById('optTotal').textContent = fmtBits(sim.stones * priceBits());
+    document.getElementById('optTotal').textContent = formatBits(sim.stones * priceBits());
 }
 
 function bodyHtml(slot) {
@@ -447,10 +433,8 @@ panel.addEventListener('input', e => {
     const g = cfg().group;
     store.price[g] = { ...store.price[g], [key]: v };
     persist();
-    document.getElementById('optTotal').textContent = fmtBits(sim.stones * priceBits());
+    document.getElementById('optTotal').textContent = formatBits(sim.stones * priceBits());
 });
 
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-
-loadTheme();
+initTheme();
 renderSlots();

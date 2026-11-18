@@ -1,5 +1,6 @@
 import { collections } from './collectionData.js';
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { loadJSON, saveJSON } from '../storage.js';
 
 const STORAGE_KEY = 'dmo_collection_checked';
 
@@ -8,20 +9,8 @@ const isPending = (effect) => effect.unit === '';
 
 const keyOf = (ci, ei) => `${ci}:${ei}`;
 
-function loadChecked() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return new Set(raw ? JSON.parse(raw) : []);
-    } catch {
-        return new Set();
-    }
-}
-
-const checked = loadChecked();
-
-function saveChecked() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...checked]));
-}
+const checked = new Set(loadJSON(STORAGE_KEY, []));
+const saveChecked = () => saveJSON(STORAGE_KEY, [...checked]);
 
 function bonusText(effect) {
     return `${effect.target} +${effect.value}${effect.unit}`;
@@ -108,8 +97,6 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     renderSummary();
 });
 
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-
-loadTheme();
+initTheme();
 renderGrid();
 renderSummary();

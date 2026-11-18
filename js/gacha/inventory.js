@@ -1,27 +1,13 @@
+import { loadJSON, saveJSON } from '../storage.js';
+
 const STORAGE_KEY = 'dmokit_inventory';
 const PITY_STORAGE_KEY = 'dmokit_pity';
-
-function loadFromStorage(key, fallback) {
-    try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        return JSON.parse(raw);
-    } catch {
-        return fallback;
-    }
-}
-
-function saveToStorage(key, value) {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch {}
-}
 
 // U등급이라도 진화 아이템이 아닌 예외 (항상 other)
 const U_OTHER_EXCEPTIONS = new Set(['봉인된 얼티밋 크로스로더']);
 
-let state = loadFromStorage(STORAGE_KEY, { items: {} });
-let pityState = loadFromStorage(PITY_STORAGE_KEY, {});
+let state = loadJSON(STORAGE_KEY, { items: {} });
+let pityState = loadJSON(PITY_STORAGE_KEY, {});
 
 // 기존 저장분 중 U등급은 모두 진화 아이템으로 정정 (예외 제외)
 for (const it of Object.values(state.items)) {
@@ -30,8 +16,8 @@ for (const it of Object.values(state.items)) {
 const listeners = new Set();
 
 function notify() {
-    saveToStorage(STORAGE_KEY, state);
-    saveToStorage(PITY_STORAGE_KEY, pityState);
+    saveJSON(STORAGE_KEY, state);
+    saveJSON(PITY_STORAGE_KEY, pityState);
     for (const fn of listeners) fn();
 }
 

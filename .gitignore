@@ -1,4 +1,4 @@
-txt
+*.txt
 
 data_img/
 __pycache__/

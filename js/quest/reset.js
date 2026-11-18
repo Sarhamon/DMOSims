@@ -6,7 +6,7 @@
 
 const HOUR = 3600 * 1000;
 const DAY = 24 * HOUR;
-const KST = 9 * HOUR;
+export const KST = 9 * HOUR;
 
 const WEEKLY_DOW = 2;       // 0=일 … 2=화
 const WEEKLY_HOUR = 8;

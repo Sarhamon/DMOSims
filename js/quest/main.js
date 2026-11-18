@@ -1,18 +1,17 @@
-import { lastDailyReset, isStale } from './reset.js';
-import { loadTheme, toggleTheme } from '../theme.js';
+import { lastDailyReset, isStale, KST } from './reset.js';
+import { initTheme } from '../theme.js';
+import { loadJSON, saveJSON } from '../storage.js';
 import { GRADES, DAILY, WEEKLY } from './questData.js';
 
 const STORE_KEY = 'dmo-quest-check:v1';
-const KST = 9 * 3600 * 1000;
 
 // 한국 시간 기준 오늘 날짜 (YYYY-MM-DD)
 function todayKey() {
     return new Date(lastDailyReset() + KST).toISOString().slice(0, 10);
 }
 function load() {
-    let s = null;
-    try { s = JSON.parse(localStorage.getItem(STORE_KEY)); } catch {}
-    if (!s || typeof s !== 'object') s = {};
+    let s = loadJSON(STORE_KEY);
+    if (typeof s !== 'object' || !s) s = {};
     return {
         dailyDate: s.dailyDate || todayKey(),
         daily: s.daily || {},
@@ -20,24 +19,24 @@ function load() {
         resets: Array.isArray(s.resets) ? s.resets : [],
     };
 }
-function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch {}
-}
+const save = () => saveJSON(STORE_KEY, state);
 let state = load();
 
 function rollDaily() {
     const t = todayKey();
     if (state.dailyDate !== t) { state.dailyDate = t; state.daily = {}; save(); }
 }
+// 주간 체크를 비우고 초기화 시각을 기록 (최근 10개만 보관).
+function resetWeekly() {
+    state.weekly = {};
+    state.resets.push(new Date().toISOString());
+    state.resets = state.resets.slice(-10);
+    save();
+}
 // 마지막 초기화 이후 화요일 8시(KST)가 지났으면 주간 체크를 비운다.
 function rollWeekly() {
     const last = state.resets.length ? Date.parse(state.resets[state.resets.length - 1]) : 0;
-    if (isStale(last, 'weekly')) {
-        state.weekly = {};
-        state.resets.push(new Date().toISOString());
-        state.resets = state.resets.slice(-10);
-        save();
-    }
+    if (isStale(last, 'weekly')) resetWeekly();
 }
 
 const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
@@ -116,15 +115,12 @@ function render() {
 
 document.getElementById('weeklyReset').addEventListener('click', () => {
     if (!confirm('주간 퀘스트 체크를 모두 지울까요?')) return;
-    state.weekly = {};
-    state.resets.push(new Date().toISOString());
-    state.resets = state.resets.slice(-10);
-    save(); render();
+    resetWeekly();
+    render();
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
 setInterval(render, 60 * 1000);
 window.addEventListener('storage', e => { if (e.key === STORE_KEY) { state = load(); render(); } });
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
-loadTheme();
+initTheme();
 render();

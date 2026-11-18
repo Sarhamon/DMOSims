@@ -1,4 +1,6 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { formatBits } from '../format.js';
+import { loadJSON, saveJSON } from '../storage.js';
 import {
     MAX_ATTEMPTS, CELLS, PROB_START, PROB_MIN, PROB_MAX,
     STAGE_TABLE, INCREASE_POOL, DECREASE_POOL,
@@ -34,14 +36,7 @@ let lastRoll = ''; // 연습 모드 직전 결과 메시지
 // 1 랜덤 능력치 = 주사위 1개. 가격은 비트 단위.
 const STORAGE_KEY = 'dmo_breakthrough';
 
-function loadStore() {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
-    } catch {
-        return {};
-    }
-}
-const store = loadStore();
+const store = loadJSON(STORAGE_KEY, {});
 
 let dice = store.dice ?? 0;
 let price = { t: store.price?.t ?? 0, m: store.price?.m ?? 0, b: store.price?.b ?? 0 };
@@ -49,7 +44,7 @@ let price = { t: store.price?.t ?? 0, m: store.price?.m ?? 0, b: store.price?.b 
 function save() {
     // 연습 중엔 실제 진행(realSim)을 저장
     const s = practice ? realSim : sim;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    saveJSON(STORAGE_KEY, {
         price,
         dice,
         sim: s && {
@@ -61,7 +56,7 @@ function save() {
                 pos: r.pos, base: r.base, bonus: r.bonus, status: r.status,
             })),
         },
-    }));
+    });
 }
 
 // 저장된 시뮬 복원. 형식/옵션이 안 맞으면 false(새로 시작).
@@ -79,19 +74,9 @@ function restoreSim(saved) {
 
 // 비트 단위: 1T = 1000M, 1M = 1000B. (옵션 시뮬과 동일 규칙)
 const priceBits = () => price.t * 1_000_000 + price.m * 1000 + price.b;
-function fmtBits(bits) {
-    const b = bits % 1000;
-    const m = Math.floor(bits / 1000) % 1000;
-    const t = Math.floor(bits / 1_000_000);
-    const parts = [];
-    if (t) parts.push(`${t}T`);
-    if (t || m) parts.push(`${m}M`);
-    parts.push(`${b}B`);
-    return parts.join(' ');
-}
 function updateCost() {
     document.getElementById('btDice').textContent = dice;
-    document.getElementById('btCostTotal').textContent = fmtBits(dice * priceBits());
+    document.getElementById('btCostTotal').textContent = formatBits(dice * priceBits());
 }
 
 const poolOf = kind => (kind === 'inc' ? INCREASE_POOL : DECREASE_POOL);
@@ -341,23 +326,23 @@ function render() {
     updateCost();
     save();
 
-    const allDone = sim.rows.every(r => r.pos >= CELLS);
     const prefix = practice ? `[연습] ${lastRoll ? lastRoll + ' — ' : ''}` : '';
-    hintEl.textContent = prefix + (sim.count >= MAX_ATTEMPTS
-        ? '돌파 시도 횟수를 모두 사용했습니다. (다시시도/랜덤 능력치로 초기화)'
-        : allDone
-            ? '모든 행이 완성되었습니다.'
-            : pending !== null
-                ? `${sim.rows[pending].opt.name} 행의 실제 돌파 결과를 선택하세요.`
-                : rec.ready === false
-                    ? '전역 최적표 계산 중…'
-                    : rec.best >= 0
-                        ? `기대값상 베스트: ${sim.rows[rec.best].opt.kind === 'inc' ? '▲' : '▼'} ${sim.rows[rec.best].opt.name} 행 (★ 표시)`
-                        : rec.stop
-                            ? '기대값상 지금 멈추는 게 이득입니다. (더 누르면 손해)'
-                            : practice
-                                ? '행을 클릭하면 확률에 따라 돌파합니다.'
-                                : '행을 클릭한 뒤 실제 돌파 결과(성공 칸 수/실패)를 입력하세요.');
+    hintEl.textContent = prefix + hintText();
+}
+
+function hintText() {
+    if (sim.count >= MAX_ATTEMPTS) return '돌파 시도 횟수를 모두 사용했습니다. (다시시도/랜덤 능력치로 초기화)';
+    if (sim.rows.every(r => r.pos >= CELLS)) return '모든 행이 완성되었습니다.';
+    if (pending !== null) return `${sim.rows[pending].opt.name} 행의 실제 돌파 결과를 선택하세요.`;
+    if (rec.ready === false) return '전역 최적표 계산 중…';
+    if (rec.best >= 0) {
+        const opt = sim.rows[rec.best].opt;
+        return `기대값상 베스트: ${opt.kind === 'inc' ? '▲' : '▼'} ${opt.name} 행 (★ 표시)`;
+    }
+    if (rec.stop) return '기대값상 지금 멈추는 게 이득입니다. (더 누르면 손해)';
+    return practice
+        ? '행을 클릭하면 확률에 따라 돌파합니다.'
+        : '행을 클릭한 뒤 실제 돌파 결과(성공 칸 수/실패)를 입력하세요.';
 }
 
 // 랜덤 능력치 = 주사위 1개 소모 후 옵션 재추첨 (연습 중엔 소모 안 함)
@@ -378,8 +363,6 @@ for (const [key, id] of Object.entries(priceInputs)) {
     });
 }
 
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-
-loadTheme();
+initTheme();
 // 저장된 상태가 있으면 복원, 없으면 새로 추첨 (새로고침 시 리롤 방지)
 if (!restoreSim(store.sim)) newSim(true);

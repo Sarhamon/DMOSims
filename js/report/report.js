@@ -1,11 +1,11 @@
 import { meta, decks, digimon } from './reportMeta.js';
+import { escapeHtml as esc } from '../format.js';
 
 /* 디지몬 → 덱 → 결과 3단계.
    결과 데이터는 디지몬·전투 시간을 고른 시점에 data/dNN-M.js 를 동적으로 불러온다. */
 
 const $ = (s) => document.querySelector(s);
 const n = (v) => v.toLocaleString('ko-KR');
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const byName = [...digimon].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 const cache = new Map();

@@ -2,7 +2,7 @@ import { MIN_LEVEL, MAX_LEVEL, MAX_SELECTABLE_LEVEL, JOURNAL_MULTIPLIERS } from 
 import { expTable } from './expTable.js';
 import { computeResults, computeTargetPlan } from './calc.js';
 import { renderResults, renderComingSoon, renderMaxLevel, renderTargetPlan, toggleLockedVisibility } from './render.js';
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
 
 const TARGET_MAX = 170;
 const ROUTES = ['/normal', '/target'];
@@ -23,6 +23,20 @@ function navigate() {
     });
 }
 
+// 경험치 % 입력: 0 이상 100 미만으로 맞추고 입력칸도 고쳐 쓴다.
+function readPercent(input) {
+    let pct = parseFloat(input.value);
+    if (isNaN(pct) || pct < 0) pct = 0;
+    if (pct >= 100) pct = 99.9999;
+    if (pct !== parseFloat(input.value)) input.value = pct;
+    return pct;
+}
+
+function readJournalMultiplier(name) {
+    const selected = document.querySelector(`input[name="${name}"]:checked`);
+    return JOURNAL_MULTIPLIERS[selected ? selected.value : '0'] ?? 1.0;
+}
+
 function readNormalInputs() {
     const lvInput = document.getElementById('userLevel');
     const pctInput = document.getElementById('currentPercent');
@@ -32,16 +46,11 @@ function readNormalInputs() {
     if (lv > MAX_SELECTABLE_LEVEL) lv = MAX_SELECTABLE_LEVEL;
     if (lv !== parseInt(lvInput.value)) lvInput.value = lv;
 
-    let curPct = parseFloat(pctInput.value);
-    if (isNaN(curPct) || curPct < 0) curPct = 0;
-    if (curPct >= 100) curPct = 99.9999;
-    if (curPct !== parseFloat(pctInput.value)) pctInput.value = curPct;
-
-    const selectedJournal = document.querySelector('input[name="journal-normal"]:checked');
-    const journalKey = selectedJournal ? selectedJournal.value : '0';
-    const expMultiplier = JOURNAL_MULTIPLIERS[journalKey] ?? 1.0;
-
-    return { level: lv, currentPct: curPct, expMultiplier };
+    return {
+        level: lv,
+        currentPct: readPercent(pctInput),
+        expMultiplier: readJournalMultiplier('journal-normal'),
+    };
 }
 
 function calculate() {
@@ -69,24 +78,20 @@ function readTargetInputs() {
     if (!curLv || curLv < MIN_LEVEL) curLv = MIN_LEVEL;
     if (curLv > TARGET_MAX - 1) curLv = TARGET_MAX - 1;
 
-    let curPct = parseFloat(curPctInput.value);
-    if (isNaN(curPct) || curPct < 0) curPct = 0;
-    if (curPct >= 100) curPct = 99.9999;
-
     let tgtLv = parseInt(tgtLvInput.value);
     if (!tgtLv) tgtLv = TARGET_MAX;
     if (tgtLv > TARGET_MAX) tgtLv = TARGET_MAX;
     if (tgtLv <= curLv) tgtLv = curLv + 1;
 
     if (curLv !== parseInt(curLvInput.value)) curLvInput.value = curLv;
-    if (curPct !== parseFloat(curPctInput.value)) curPctInput.value = curPct;
     if (tgtLv !== parseInt(tgtLvInput.value)) tgtLvInput.value = tgtLv;
 
-    const selectedJournal = document.querySelector('input[name="journal-target"]:checked');
-    const journalKey = selectedJournal ? selectedJournal.value : '0';
-    const expMultiplier = JOURNAL_MULTIPLIERS[journalKey] ?? 1.0;
-
-    return { currentLevel: curLv, currentPct: curPct, targetLevel: tgtLv, expMultiplier };
+    return {
+        currentLevel: curLv,
+        currentPct: readPercent(curPctInput),
+        targetLevel: tgtLv,
+        expMultiplier: readJournalMultiplier('journal-target'),
+    };
 }
 
 function calculateTarget() {
@@ -108,12 +113,11 @@ document.querySelectorAll('#targetCurrentLevel, #targetCurrentPercent, #targetGo
         if (e.key === 'Enter') calculateTarget();
     });
 });
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 document.getElementById('normalCalcBtn').addEventListener('click', calculate);
 document.getElementById('targetCalcBtn').addEventListener('click', calculateTarget);
 window.addEventListener('hashchange', navigate);
 
-loadTheme();
+initTheme();
 navigate();
 calculate();
 calculateTarget();

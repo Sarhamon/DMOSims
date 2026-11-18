@@ -1,6 +1,7 @@
 import { NONSEASON_TIERS, SEASON_TIERS, RANKER_TIERS } from './data.js';
 import { EXCHANGE_GROUPS, EQUIV } from './exchange.js';
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { loadJSON, saveJSON } from '../storage.js';
 
 // 시즌 진행 순서: 비시즌 1차(3주) → 비시즌 2차(3주) → 시즌 던전(2주) → 휴식(1주)
 const PHASES = [
@@ -159,12 +160,11 @@ function saveState() {
         phase: document.querySelector('input[name="expPhase"]:checked').value,
         round: document.getElementById('clearRound').value,
     };
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    saveJSON(STORE_KEY, state);
 }
 
 function loadState() {
-    let state;
-    try { state = JSON.parse(localStorage.getItem(STORE_KEY)); } catch { state = null; }
+    const state = loadJSON(STORE_KEY);
     if (!state) return;
 
     const setRadio = (name, value) => {
@@ -204,9 +204,8 @@ document.getElementById('exchangeList').addEventListener('change', update);
 ['expNonseason', 'expSeason', 'expRanker', 'expPhase'].forEach(id => {
     document.getElementById(id).addEventListener('change', update);
 });
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
 buildExchangeUI();
 loadState();
 calculateExchange();
-loadTheme();
+initTheme();
