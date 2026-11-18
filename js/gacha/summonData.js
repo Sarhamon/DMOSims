@@ -2,10 +2,10 @@
 // 각 아이템: { probability, name, grade, category } (category: 'evolution' | 'other')
 // pity.every 회마다 pity.reward를 고정 보장으로 추가 지급.
 
-// 천장 횟수별 소환 등급 라벨 (30: 레전드, 50: 스페셜, 100: 일반, 150: 프리미엄)
+// 천장 횟수별 소환 등급 라벨 (30: 레전드, 50: 코스튬, 100: 일반, 150: 프리미엄)
 export function tierLabel(every) {
     if (every === 30) return '레전드 데이터 소환';
-    if (every === 50) return '스페셜 데이터 소환';
+    if (every === 50) return '코스튬 데이터 소환';
     if (every === 100) return '일반 데이터 소환';
     if (every === 150) return '프리미엄 데이터 소환';
     return `${every}회 천장`;
