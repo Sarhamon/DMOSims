@@ -1,9 +1,11 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { escapeHtml } from '../format.js';
+import { loadJSON, saveJSON } from '../storage.js';
 import { moduleFusions } from './moduleData.js';
 import { GRADES as BOX_TYPES, DAILY, WEEKLY } from '../quest/questData.js';
 import { flipCardWrap, revealAllRowHTML, setupFlip } from './flipCard.js';
+import { gradeRank, gradeClass, pullWeighted, gradeChips, formatCostM, autoReveal } from './common.js';
 
-const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
 const FUSION_BATCH_SIZE = 10;
 // 목표 융합에서 재료를 자동 수급하는 최대 주 수
 const MAX_WEEKS = 10000;
@@ -32,45 +34,14 @@ const ascFusions = [...moduleFusions].sort((a, b) => gradeRank(b.inputGrade) - g
 let currentMode = 'auto';
 
 function load() {
-    try {
-        const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        if (s && s.boxes && s.items) return { spent: 0, ...s };
-    } catch {}
+    const s = loadJSON(STORAGE_KEY);
+    if (s && s.boxes && s.items) return { spent: 0, ...s };
     return { boxes: {}, items: {}, spent: 0 };
 }
 let state = load();
-function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-}
+const save = () => saveJSON(STORAGE_KEY, state);
 
-function gradeRank(g) {
-    const i = GRADE_ORDER.indexOf(g);
-    return i === -1 ? 999 : i;
-}
-function gradeClass(g) { return 'grade-' + g.replace('+', 'plus'); }
-function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-}
-// 비용은 M 단위로 들고 있다 (1T = 1000M)
-function formatBit(m) {
-    const t = Math.floor(m / 1000), rest = m % 1000;
-    if (!t) return `${rest}M`;
-    return rest ? `${t.toLocaleString()}T ${rest}M` : `${t.toLocaleString()}T`;
-}
 const pickUniform = arr => arr[Math.floor(Math.random() * arr.length)];
-
-function pullOne(items) {
-    const total = items.reduce((s, i) => s + i.probability, 0);
-    const roll = Math.random() * total;
-    let acc = 0;
-    for (const item of items) {
-        acc += item.probability;
-        if (roll < acc) return item;
-    }
-    return items[items.length - 1];
-}
 
 function addItem(name, grade) {
     const slot = state.items[name] || (state.items[name] = { name, grade, count: 0 });
@@ -147,7 +118,7 @@ function fuseOnce(fusionList) {
     for (const group of fusionList) {
         if (countOfGrade(group.inputGrade) < group.inputCount) continue;
         consumeGrade(group.inputGrade, group.inputCount);
-        const result = pullOne(group.results);
+        const result = pullWeighted(group.results);
         addItem(result.name, result.grade);
         state.spent += group.cost;
         // 확률표의 상위 등급 40% 가 곧 등급업 확률이다 (추가 등급업 없음)
@@ -229,7 +200,7 @@ function renderTargetResult(found, grade, option, results, weeks) {
             ${stat('자동 수급', `${weeks.toLocaleString()}주${weeks >= 52 ? ` (약 ${(weeks / 52).toFixed(1)}년)` : ''}`)}
             ${stat('합성', `${results.length.toLocaleString()}회`)}
             ${stat('등급업', `${upgraded.toLocaleString()}회`)}
-            ${stat('비용', formatBit(sumCost(results)))}
+            ${stat('비용', formatCostM(sumCost(results)))}
         </div>
         <div class="stat-grade-list">${gradeChips(byGrade)}</div>`;
 }
@@ -237,7 +208,7 @@ function renderTargetResult(found, grade, option, results, weeks) {
 const sumCost = results => results.reduce((s, r) => s + r.cost, 0);
 
 function renderCards(results, requested) {
-    let suffix = `(${results.length}회 합성 · 비용 ${formatBit(sumCost(results))})`;
+    let suffix = `(${results.length}회 합성 · 비용 ${formatCostM(sumCost(results))})`;
     if (requested > results.length) suffix += ` · 재료 부족으로 ${requested - results.length}회 중단`;
     fusionResultCount.textContent = suffix;
     const cards = results.length > 1 ? [revealAllRowHTML()] : [];
@@ -246,11 +217,7 @@ function renderCards(results, requested) {
     }
     fusionResultGrid.innerHTML = cards.join('');
     setupFlip(fusionResultGrid);
-    if (autoRevealCheck.checked) {
-        const btn = fusionResultGrid.querySelector('.reveal-all-btn');
-        if (btn) btn.click();
-        else fusionResultGrid.querySelector('.flip-card:not(.revealed)')?.click();
-    }
+    autoReveal(fusionResultGrid, autoRevealCheck);
 }
 
 function buildFlipBack(it) {
@@ -260,12 +227,6 @@ function buildFlipBack(it) {
 }
 
 // ── 렌더 ──
-function gradeChips(counts) {
-    return Object.keys(counts).sort((a, b) => gradeRank(a) - gradeRank(b))
-        .map(g => `<span class="stat-grade ${gradeClass(g)}"><span class="g-label">${escapeHtml(g)}</span><span class="g-count">${counts[g].toLocaleString()}</span></span>`)
-        .join('');
-}
-
 function renderBoxes() {
     const total = Object.values(state.boxes).reduce((s, n) => s + n, 0);
     boxList.innerHTML = BOX_TYPES.map(b => `<div class="summary-item">
@@ -284,7 +245,7 @@ function renderFusionAvail() {
         possible += n;
     }
     fuse10Btn.disabled = possible === 0;
-    fusionAvail.textContent = possible > 0 ? `현재 재료로 ${possible}회 합성 가능 · 다음 합성: ${next.inputGrade} (${formatBit(next.cost)})` : '합성 가능한 모듈이 없습니다.';
+    fusionAvail.textContent = possible > 0 ? `현재 재료로 ${possible}회 합성 가능 · 다음 합성: ${next.inputGrade} (${formatCostM(next.cost)})` : '합성 가능한 모듈이 없습니다.';
 }
 
 function renderInventory() {
@@ -293,7 +254,7 @@ function renderInventory() {
     const counts = {};
     for (const it of items) counts[it.grade] = (counts[it.grade] || 0) + it.count;
     const total = items.reduce((s, it) => s + it.count, 0);
-    invCount.textContent = `모듈: ${total.toLocaleString()}개 · 누적 비용 ${formatBit(state.spent)}`;
+    invCount.textContent = `모듈: ${total.toLocaleString()}개 · 누적 비용 ${formatCostM(state.spent)}`;
     invSummary.innerHTML = items.length ? gradeChips(counts) : '<span class="empty-msg-inline">모듈 없음</span>';
     invGrid.innerHTML = items.length
         ? items.map(it => `<div class="inv-item ${gradeClass(it.grade)}">
@@ -327,8 +288,6 @@ el('clearInvBtn').addEventListener('click', () => {
 document.querySelectorAll('input[name="fusion-mode"]').forEach(radio => {
     radio.addEventListener('change', () => { currentMode = radio.value; renderFusionAvail(); });
 });
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-
 // 퀘스트 1회분 보상 표시
 const sumByBox = quests => BOX_TYPES
     .map(b => [b, quests.filter(q => q.grade === b.key).reduce((s, q) => s + q.n, 0)])
@@ -338,6 +297,6 @@ const sumByBox = quests => BOX_TYPES
 el('dailyReward').innerHTML = sumByBox(DAILY);
 el('weeklyReward').innerHTML = sumByBox(WEEKLY);
 
-loadTheme();
+initTheme();
 populateTargetOptions();
 render();

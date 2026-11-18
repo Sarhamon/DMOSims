@@ -1,4 +1,5 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { escapeHtml } from '../format.js';
 import { fusions } from './fusionData.js';
 import {
     addItems, consumeItems, getAll, getByGrade, getCountByGrade,
@@ -6,8 +7,8 @@ import {
 } from './inventory.js';
 import { flipCardWrap, revealAllRowHTML, setupFlip } from './flipCard.js';
 import { maybeUpgrade } from './upgrade.js';
+import { gradeRank, gradeClass, pullWeighted, gradeChips, autoReveal } from './common.js';
 
-const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
 const FUSION_BATCH_SIZE = 10;
 
 const fusionAvail = document.getElementById('fusionAvail');
@@ -44,30 +45,6 @@ function getActiveFusions() {
     return sortedFusions.filter(g => g.inputGrade === currentMode);
 }
 
-function gradeRank(g) {
-    const i = GRADE_ORDER.indexOf(g);
-    return i === -1 ? 999 : i;
-}
-
-function gradeClass(g) { return 'grade-' + g.replace('+', 'plus'); }
-
-function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-}
-
-function pullOne(items) {
-    const total = items.reduce((s, i) => s + i.probability, 0);
-    const roll = Math.random() * total;
-    let acc = 0;
-    for (const item of items) {
-        acc += item.probability;
-        if (roll < acc) return item;
-    }
-    return items[items.length - 1];
-}
-
 function pickAutoConsume(grade, count) {
     const itemsCopy = getByGrade(grade, 'evolution').map(it => ({ ...it }))
         .sort((a, b) => b.count - a.count);
@@ -84,13 +61,13 @@ function pickAutoConsume(grade, count) {
 
 function fuseOne(group, consumedNames) {
     consumeItems(consumedNames);
-    const result = maybeUpgrade(pullOne(group.results), group.results);
+    const result = maybeUpgrade(pullWeighted(group.results), group.results);
     addItems([{ name: result.name, grade: result.grade, category: 'evolution' }]);
     let pityResult = null;
     if (group.pity) {
         const counter = incrementPity(group.name);
         if (counter >= group.pity.every) {
-            pityResult = maybeUpgrade(pullOne(group.pity.results), group.pity.results);
+            pityResult = maybeUpgrade(pullWeighted(group.pity.results), group.pity.results);
             addItems([{ name: pityResult.name, grade: pityResult.grade, category: 'evolution' }]);
             resetPity(group.name);
         }
@@ -136,9 +113,8 @@ function renderInventorySection({ category, countEl, summaryEl, gridEl, emptyMsg
     if (countEl) countEl.textContent = total > 0 ? `(${total.toLocaleString()}개)` : '';
 
     const counts = getCountByGrade(category);
-    const grades = Object.keys(counts).sort((a, b) => gradeRank(a) - gradeRank(b));
-    summaryEl.innerHTML = grades.length
-        ? grades.map(g => `<span class="stat-grade ${gradeClass(g)}"><span class="g-label">${escapeHtml(g)}</span><span class="g-count">${counts[g]}</span></span>`).join('')
+    summaryEl.innerHTML = Object.keys(counts).length
+        ? gradeChips(counts)
         : '<span class="empty-msg-inline">아이템 없음</span>';
 
     if (!items.length) {
@@ -206,11 +182,7 @@ function renderResults(batches, requestedTickets, executedTickets) {
     }
     fusionResultGrid.innerHTML = cards.length ? cards.join('') : '<div class="empty-msg">결과 없음</div>';
     setupFlip(fusionResultGrid);
-    if (autoRevealCheck?.checked) {
-        const btn = fusionResultGrid.querySelector('.reveal-all-btn');
-        if (btn) btn.click();
-        else fusionResultGrid.querySelector('.flip-card:not(.revealed)')?.click();
-    }
+    autoReveal(fusionResultGrid, autoRevealCheck);
 }
 
 function fuseAuto(tickets) {
@@ -262,16 +234,13 @@ document.querySelectorAll('input[name="fusion-mode"]').forEach(radio => {
     });
 });
 
-const themeToggle = document.querySelector('.theme-toggle');
-if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
-
 subscribe(() => {
     updateFusionAvail();
     renderPity();
     renderInventory();
 });
 
-loadTheme();
+initTheme();
 updateFusionAvail();
 renderPity();
 renderInventory();

@@ -1,20 +1,5 @@
 import { fusions } from './fusionData.js';
-
-const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
-function gradeRank(g) {
-    const i = GRADE_ORDER.indexOf(g);
-    return i === -1 ? 999 : i;
-}
-
-function pullWeighted(items) {
-    const total = items.reduce((s, i) => s + i.probability, 0);
-    let roll = Math.random() * total;
-    for (const item of items) {
-        roll -= item.probability;
-        if (roll <= 0) return item;
-    }
-    return items[items.length - 1];
-}
+import { gradeRank, pullWeighted } from './common.js';
 
 const upgradeMap = {};
 for (const group of fusions) {

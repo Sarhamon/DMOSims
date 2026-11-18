@@ -20,3 +20,9 @@ export function toggleTheme() {
 export function loadTheme() {
     applyTheme(document.documentElement.classList.contains('dark-mode'));
 }
+
+// 페이지 공통: 테마 버튼 연결 + 현재 테마 반영.
+export function initTheme() {
+    document.querySelector('.theme-toggle')?.addEventListener('click', toggleTheme);
+    loadTheme();
+}

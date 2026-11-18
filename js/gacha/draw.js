@@ -1,10 +1,10 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { escapeHtml } from '../format.js';
 import { draws } from './drawData.js';
 import { addItems, getTotalCount, subscribe } from './inventory.js';
 import { flipCardWrap, revealAllRowHTML, setupFlip } from './flipCard.js';
 import { maybeUpgrade } from './upgrade.js';
-
-const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
+import { byGradeRank, gradeClass, pullWeighted, gradeSummary, autoReveal } from './common.js';
 
 const drawMeta = document.getElementById('drawMeta');
 const pull1Btn = document.getElementById('pull1Btn');
@@ -17,31 +17,6 @@ const resultCount = document.getElementById('resultCount');
 
 let currentDraw = null;
 let stats = { tickets: 0, total: 0, byGrade: {} };
-
-function gradeRank(grade) {
-    const idx = GRADE_ORDER.indexOf(grade);
-    return idx === -1 ? 999 : idx;
-}
-
-function escapeHtml(s) {
-    return s.replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-}
-
-function gradeClass(grade) {
-    return 'grade-' + grade.replace('+', 'plus');
-}
-
-function pullOne(draw) {
-    const roll = Math.random() * 100;
-    let acc = 0;
-    for (const item of draw.items) {
-        acc += item.probability;
-        if (roll < acc) return item;
-    }
-    return draw.items[draw.items.length - 1];
-}
 
 function populatePicker() {
     const picker = document.getElementById('drawPicker');
@@ -64,13 +39,7 @@ function populatePicker() {
 
 function updateDrawMeta() {
     if (!currentDraw) { drawMeta.textContent = '—'; return; }
-    const byGrade = {};
-    for (const it of currentDraw.items) {
-        byGrade[it.grade] = (byGrade[it.grade] || 0) + 1;
-    }
-    const grades = Object.keys(byGrade).sort((a, b) => gradeRank(a) - gradeRank(b));
-    const parts = grades.map(g => `${g} ${byGrade[g]}`);
-    drawMeta.textContent = `1회당 ${currentDraw.pullCount}개 · 총 ${currentDraw.items.length}종 · ${parts.join(' / ')}`;
+    drawMeta.textContent = `1회당 ${currentDraw.pullCount}개 · 총 ${currentDraw.items.length}종 · ${gradeSummary(currentDraw.items)}`;
     pull1Btn.textContent = `1회 뽑기 (${currentDraw.pullCount}개)`;
 }
 
@@ -82,7 +51,7 @@ function resetStats() {
 
 function renderStats() {
     statTotal.textContent = `${stats.total.toLocaleString()}개 (${stats.tickets.toLocaleString()}회 사용)`;
-    const grades = Object.keys(stats.byGrade).sort((a, b) => gradeRank(a) - gradeRank(b));
+    const grades = Object.keys(stats.byGrade).sort(byGradeRank);
     if (grades.length === 0) {
         statGradeList.innerHTML = stats.total > 0
             ? '<span class="empty-msg-inline">카드를 공개하면 등급이 표시됩니다.</span>'
@@ -133,11 +102,7 @@ function renderResults(items) {
     }
     resultGrid.innerHTML = parts.join('');
     setupFlip(resultGrid, onCardReveal);
-    if (autoRevealCheck?.checked) {
-        const btn = resultGrid.querySelector('.reveal-all-btn');
-        if (btn) btn.click();
-        else resultGrid.querySelector('.flip-card:not(.revealed)')?.click();
-    }
+    autoReveal(resultGrid, autoRevealCheck);
 }
 
 function onCardReveal(card) {
@@ -152,7 +117,7 @@ function pull(tickets) {
     const totalItems = tickets * currentDraw.pullCount;
     const results = [];
     for (let i = 0; i < totalItems; i++) {
-        results.push(maybeUpgrade(pullOne(currentDraw), currentDraw.items));
+        results.push(maybeUpgrade(pullWeighted(currentDraw.items), currentDraw.items));
     }
     stats.tickets += tickets;
     stats.total += totalItems;
@@ -168,9 +133,8 @@ function updateInvCount() {
 
 pull1Btn.addEventListener('click', () => pull(1));
 resetBtn.addEventListener('click', resetStats);
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 subscribe(updateInvCount);
 
-loadTheme();
+initTheme();
 populatePicker();
 updateInvCount();

@@ -1,4 +1,3 @@
-import { loadTheme, toggleTheme } from './theme.js';
+import { initTheme } from './theme.js';
 
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
-loadTheme();
+initTheme();

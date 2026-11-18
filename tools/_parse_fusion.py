@@ -20,7 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 RAW = HERE / "_raw_fusion.txt"
-OUT = HERE / "fusionData.js"
+OUT = HERE.parent / "js" / "gacha" / "fusionData.js"
 
 PROB_RE = re.compile(r'(\d+\.\d+)%')
 PITY_HEADER_RE = re.compile(r'^(.+?)\t(\d+)회\t')

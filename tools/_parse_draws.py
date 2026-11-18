@@ -23,7 +23,7 @@ def infer_pull_count(name):
 
 HERE = Path(__file__).parent
 RAW = HERE / "_raw_draws.txt"
-OUT = HERE / "drawData.js"
+OUT = HERE.parent / "js" / "gacha" / "drawData.js"
 
 PROB_RE = re.compile(r'(\d+\.\d+)%')
 

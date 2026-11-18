@@ -1,10 +1,10 @@
-import { loadTheme, toggleTheme } from '../theme.js';
+import { initTheme } from '../theme.js';
+import { escapeHtml } from '../format.js';
 import { draws } from './drawData.js';
 import { summons, tierLabel } from './summonData.js';
 import { fusions } from './fusionData.js';
 import { moduleFusions } from './moduleData.js';
-
-const GRADE_ORDER = ['U', 'SSS+', 'SSS', 'SS+', 'SS', 'S+', 'S', 'A+', 'A', 'N'];
+import { gradeRank, gradeClass, gradeSummary, formatCostM } from './common.js';
 
 const tabs = document.getElementById('rateTabs');
 const poolSelect = document.getElementById('poolSelect');
@@ -13,28 +13,6 @@ const rateList = document.getElementById('rateList');
 const rateCount = document.getElementById('rateCount');
 
 let currentCat = 'draw';
-
-function gradeRank(grade) {
-    const idx = GRADE_ORDER.indexOf(grade);
-    return idx === -1 ? 999 : idx;
-}
-
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[c]));
-}
-
-function gradeClass(grade) {
-    return 'grade-' + grade.replace('+', 'plus');
-}
-
-// 모듈 합성 비용 (M 단위, 1T = 1000M)
-function formatBit(m) {
-    const t = Math.floor(m / 1000), rest = m % 1000;
-    if (!t) return `${rest}M`;
-    return rest ? `${t.toLocaleString()}T ${rest}M` : `${t.toLocaleString()}T`;
-}
 
 function formatProb(p) {
     return Number(p).toFixed(2) + '%';
@@ -58,13 +36,6 @@ function sortItems(items) {
         if (dr !== 0) return dr;
         return b.probability - a.probability;
     });
-}
-
-function gradeSummary(items) {
-    const byGrade = {};
-    for (const it of items) byGrade[it.grade] = (byGrade[it.grade] || 0) + 1;
-    const grades = Object.keys(byGrade).sort((a, b) => gradeRank(a) - gradeRank(b));
-    return grades.map(g => `${g} ${byGrade[g]}`).join(' / ');
 }
 
 function populatePoolSelector() {
@@ -106,7 +77,7 @@ function renderPool() {
         metaParts.unshift(`${pool.inputGrade} ${pool.inputCount}개 → 1개`);
     }
     if (currentCat === 'module') {
-        metaParts.splice(1, 0, `비용 ${formatBit(pool.cost)}`);
+        metaParts.splice(1, 0, `비용 ${formatCostM(pool.cost)}`);
     }
     poolMeta.textContent = metaParts.filter(Boolean).join(' · ');
     rateCount.textContent = `(${items.length}종)`;
@@ -147,7 +118,6 @@ tabs.addEventListener('click', e => {
     setCategory(btn.dataset.cat);
 });
 poolSelect.addEventListener('change', renderPool);
-document.querySelector('.theme-toggle').addEventListener('click', toggleTheme);
 
-loadTheme();
+initTheme();
 setCategory('draw');
