@@ -1,5 +1,5 @@
 """
-Parse _raw_fusion.txt into fusionData.js
+Parse _raw_fusion.txt into js/gacha/fusionData.js
 
 Format:
 [MAIN]

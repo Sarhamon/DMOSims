@@ -1,5 +1,5 @@
 """
-Parse _raw_draws.txt into drawData.js
+Parse _raw_draws.txt into js/gacha/drawData.js
 Format: lines are tab-separated. Each draw starts with: <draw_name>\t<prob>%\t<item>\t<grade>
 Subsequent items: <prob>%\t<item>\t<grade>
 

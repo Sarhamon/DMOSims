@@ -1,3 +1,4 @@
+// 키 이름은 js/theme-init.js와 같아야 한다.
 const STORAGE_KEY = 'dmo_theme';
 
 function applyTheme(isDark) {
