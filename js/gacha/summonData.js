@@ -39,14 +39,14 @@ export const summons = [
         ],
     },
     {
-        id: "wish-premium",
-        name: "소망을 담은 깃털",
+        id: "miracle-premium",
+        name: "광림하는 기적의 캡슐",
         pity: {
             every: 150,
-            reward: { name: "소망을 담은 깃털", grade: "U", category: "other" },
+            reward: { name: "광림하는 기적의 캡슐", grade: "U", category: "other" },
         },
         items: [
-            { probability: 0.05, name: "소망을 담은 깃털", grade: "U", category: "other" },
+            { probability: 0.05, name: "광림하는 기적의 캡슐", grade: "U", category: "other" },
             { probability: 0.10, name: "궁극 디지털 데이터", grade: "U", category: "other" },
             { probability: 0.45, name: "랜덤 프론티어 장비 상자", grade: "SSS+", category: "other" },
             { probability: 0.50, name: "놀라운 힘의 응축체[SSS+]", grade: "SSS+", category: "evolution" },
@@ -75,14 +75,14 @@ export const summons = [
         ],
     },
     {
-        id: "wish-normal",
-        name: "소망을 담은 깃털",
+        id: "miracle-normal",
+        name: "광림하는 기적의 캡슐",
         pity: {
             every: 100,
-            reward: { name: "소망을 담은 깃털 [지급용]", grade: "U", category: "other" },
+            reward: { name: "광림하는 기적의 캡슐 [지급용]", grade: "U", category: "other" },
         },
         items: [
-            { probability: 0.05, name: "소망을 담은 깃털 [지급용]", grade: "U", category: "other" },
+            { probability: 0.05, name: "광림하는 기적의 캡슐", grade: "U", category: "other" },
             { probability: 0.10, name: "궁극 디지털 데이터 [지급용]", grade: "U", category: "other" },
             { probability: 0.45, name: "랜덤 프론티어 장비 상자", grade: "SSS+", category: "other" },
             { probability: 0.50, name: "놀라운 힘의 응축체[SSS+]", grade: "SSS+", category: "evolution" },
