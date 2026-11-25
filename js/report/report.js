@@ -15,12 +15,20 @@ let deckIdx = null;     // decks 의 인덱스. null 이면 덱 목록
 let rows = null;        // 현재 디지몬의 결과 (decks 와 같은 순서, 리포트에 없던 덱은 null)
 let sortMode = 'own';   // 'own' = 이 디지몬 덱 먼저, 'dmg' = 딜량 순
 let dur = meta.durations[0];  // 전투 시간(초)
+let ocOn = false;       // 오버클럭 ON/OFF. 기본은 OFF, 디지몬을 바꾸면 OFF 로 돌아간다
+let ocLv = 1;           // 오버클럭 단계
+let baseRows = null;    // 오버클럭 ON 일 때 비교할 OFF 결과 (rows 와 같은 순서). OFF 면 null
 
-async function load(name) {
-    const key = `${name}/${dur}`;
+/* 보고 있는 디지몬에 실제로 적용되는 오버클럭 단계. 대상이 아니거나 OFF 면 0 */
+const ocEntry = () => (picked === null ? undefined
+    : digimon.find((d) => d.name === picked).oc.find((o) => o.lv === ocLv));
+const ocNow = () => (ocOn && ocEntry() ? ocLv : 0);
+
+async function load(name, oc = ocNow()) {
+    const key = `${name}/${dur}/${oc}`;
     if (!cache.has(key)) {
         const file = digimon.find((d) => d.name === name).file;
-        cache.set(key, (await import(`./data/${file}-${dur / 60}.js`)).default);
+        cache.set(key, (await import(`./data/${file}-${dur / 60}${oc ? `-oc${oc}` : ''}.js`)).default);
     }
     return cache.get(key);
 }
@@ -52,6 +60,15 @@ const effChips = (deck) => deck.effects
 const multChips = (r) => r.mult
     .map((x) => `<span class="eff-chip"><b>+${x.pct.toFixed(1)}%</b><i>${x.slot}스 실측 배수</i></span>`)
     .join('');
+
+/* 오버클럭 OFF 대비 증가율 (%). OFF 이거나 비교할 결과가 없으면 null */
+const ocUp = (i, key) => (baseRows && baseRows[i]
+    ? (rows[i][key] / baseRows[i][key] - 1) * 100 : null);
+const ocUpText = (v) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`;
+const ocChip = (i) => {
+    const v = ocUp(i, 'total');
+    return v === null ? '' : `<span class="eff-chip"><b>${ocUpText(v)}</b><i>오버클럭 ${ocNow()}단계 · 총 딜</i></span>`;
+};
 
 /* 덱을 채우는 디지몬. 보고 있는 디지몬은 강조한다.
    아직 안 채운 덱은 덱 종류를 대신 보여준다.
@@ -110,11 +127,14 @@ function renderStatic() {
 
 /* ---------- 디지몬 머리말 (덱 목록 · 상세 공용) ------------------------ */
 function digimonHead(sub) {
-    const notes = digimon.find((d) => d.name === picked).notes;
+    /* 오버클럭 단계마다 고유스킬이 붙어 안내가 달라질 수 있다 */
+    const oc = ocNow() ? ocEntry() : null;
+    const notes = oc ? oc.notes : digimon.find((d) => d.name === picked).notes;
     return `
         <div class="dg-head">
             <span class="dg-rank mono">${sub}</span>
             <h2 class="dg-title">${esc(picked)}</h2>
+            ${oc ? `<p class="dg-aoe-note"><b>오버클럭 ${oc.lv}단계</b> (${esc(oc.label)})</p>` : ''}
             ${notes.map((t) => `<p class="dg-aoe-note">${esc(t)}</p>`).join('')}
         </div>`;
 }
@@ -149,7 +169,7 @@ function renderDecks() {
                     <h3 class="module-title">${deckTitle(deck.name)}</h3>
                 </span>
                 <p class="module-desc deck-meta mono">${deckSub(deck)}</p>
-                <div class="deck-effs">${effChips(deck)}</div>
+                <div class="deck-effs">${effChips(deck)}${ocChip(i)}</div>
             </button>`).join('')}
         </div>`;
 }
@@ -208,6 +228,10 @@ function renderDetail() {
     const rank = order.findIndex((o) => o.i === deckIdx);
     const deck = decks[deckIdx];
     const r = rows[deckIdx];
+    const up = (key) => {
+        const v = ocUp(deckIdx, key);
+        return v === null ? '' : `<span class="oc-up">OFF 대비 ${ocUpText(v)}</span>`;
+    };
 
     const steady = r.steady.length
         ? `<div class="rp-seq">${seq(r.steady, false)}<span class="loop">반복</span></div>`
@@ -233,8 +257,8 @@ function renderDetail() {
             <div class="deck-effs">${effChips(deck)}</div>
             <div class="deck-effs">${multChips(r)}</div>
             <dl class="hero-stats">
-                <div><dt class="mono">총 딜</dt><dd>${n(r.total)}</dd></div>
-                <div><dt class="mono">DPS</dt><dd>${n(r.dps)}</dd></div>
+                <div><dt class="mono">총 딜</dt><dd>${n(r.total)}${up('total')}</dd></div>
+                <div><dt class="mono">DPS</dt><dd>${n(r.dps)}${up('dps')}</dd></div>
                 <div><dt class="mono">시전 점유율</dt><dd>${r.uptime.toFixed(1)}<span class="u">% · 유휴 ${r.idle}초</span></dd></div>
                 ${r.selfBuff ? `<div><dt class="mono">버프/디버프 적용</dt><dd>${r.selfBuff[0]}<span class="u">/ ${r.selfBuff[1]}회</span></dd></div>` : ''}
             </dl>
@@ -266,7 +290,10 @@ function renderDetail() {
 
 /* ---------- 화면 전환 --------------------------------------------------- */
 async function render() {
-    if (picked !== null && rows === null) rows = await load(picked);
+    if (picked !== null && rows === null) {
+        rows = await load(picked);
+        baseRows = ocNow() ? await load(picked, 0) : null;
+    }
     /* 덱 인덱스는 디지몬끼리 공유하므로, 이 디지몬에 결과가 없는 덱이면 덱 목록으로 되돌린다 */
     if (picked !== null && deckIdx !== null && rows[deckIdx] === null) deckIdx = null;
 
@@ -275,6 +302,19 @@ async function render() {
 
     const list = picked === null;
     const detail = !list && deckIdx !== null;
+
+    /* 오버클럭 줄은 대상 디지몬을 보고 있을 때만. 단계 버튼은 스위치가 ON 일 때만 */
+    const ocs = list ? [] : digimon.find((d) => d.name === picked).oc;
+    $('#ocRow').hidden = !ocs.length;
+    if (ocs.length) {
+        $('#ocSwitch').checked = ocNow() > 0;
+        $('#ocLvPick').hidden = !ocNow();
+        $('#ocLvPick').innerHTML = ocs.map((o) => `
+            <label class="radio-option" title="${esc(o.label)}">
+                <span class="label-text">오버클럭 ${o.lv}단계</span>
+                <input type="radio" name="ocLv" value="${o.lv}"${o.lv === ocLv ? ' checked' : ''}>
+            </label>`).join('');
+    }
 
     $('#viewList').hidden = !list;
     $('#viewDecks').hidden = list || detail;
@@ -308,7 +348,8 @@ function readHash() {
     const d = p.get('d');
     const next = d && digimon.some((x) => x.name === d) ? d : null;
 
-    if (next !== picked) { picked = next; rows = null; }
+    /* 오버클럭은 주소에 남기지 않고, 디지몬이 바뀌면 항상 OFF 로 돌아간다 */
+    if (next !== picked) { picked = next; rows = null; ocOn = false; ocLv = 1; }
 
     const t = Number(p.get('t'));
     /* 없어진 전투 시간(예전 5 · 15분 링크의 t=300 · 900)은 주소에서 지운다 */
@@ -349,6 +390,13 @@ $('#viewDetail').addEventListener('change', (e) => {
 });
 $('#durPick').addEventListener('change', (e) => {
     if (e.target.name === 'dur') { dur = Number(e.target.value); rows = null; writeHash(); }
+});
+/* 단계 칩은 그릴 때마다 새로 만들어지므로 줄 전체에서 위임으로 받는다 */
+$('#ocRow').addEventListener('change', (e) => {
+    if (e.target.id === 'ocSwitch') ocOn = e.target.checked;
+    else if (e.target.name === 'ocLv') ocLv = Number(e.target.value);
+    else return;
+    rows = null; writeHash();
 });
 $('#backBtn').addEventListener('click', () => {
     if (deckIdx !== null) deckIdx = null;

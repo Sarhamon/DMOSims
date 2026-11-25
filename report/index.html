@@ -24,11 +24,13 @@
         .slot-3 { --sc: #a65f00; }
         .slot-4 { --sc: #6741d9; }
         .slot-5 { --sc: #c2255c; }
+        .slot-6 { --sc: #1c6dd0; }
         html.dark-mode .slot-1 { --sc: #98a2ad; }
         html.dark-mode .slot-2 { --sc: #4de3c7; }
         html.dark-mode .slot-3 { --sc: #ffb84d; }
         html.dark-mode .slot-4 { --sc: #b197fc; }
         html.dark-mode .slot-5 { --sc: #ff8fab; }
+        html.dark-mode .slot-6 { --sc: #74c0fc; }
 
         .slot-chip {
             display: inline-flex;
@@ -117,6 +119,40 @@
             margin: 0 0 22px;
         }
         .rp-durpick .field-label { margin: 0; }
+        /* display:flex 가 hidden 속성을 덮지 않게 한다 */
+        .rp-durpick[hidden], .journal-radios[hidden] { display: none; }
+
+        /* 오버클럭 스위치 */
+        .oc-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .oc-switch input { position: absolute; opacity: 0; pointer-events: none; }
+        .oc-track {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            border-radius: 11px;
+            background: var(--line-strong);
+            transition: background 0.18s;
+        }
+        .oc-knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--bg-elev);
+            transition: transform 0.18s;
+        }
+        .oc-switch input:checked + .oc-track { background: var(--accent); }
+        .oc-switch input:checked + .oc-track .oc-knob { transform: translateX(18px); }
+        .oc-switch input:focus-visible + .oc-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+        /* 오버클럭 OFF 대비 딜 증가 */
+        .hero-stats dd .oc-up { font-size: 0.75rem; font-weight: 600; color: var(--accent-ink); margin-left: 6px; }
 
         /* 덱 정렬 전환 — tool.css 의 선택 칩을 그대로 쓴다 */
         .deck-sort { margin: -8px 0 22px; }
@@ -387,6 +423,15 @@
             <div class="rp-durpick">
                 <span class="field-label mono">전투 시간</span>
                 <div class="journal-radios" id="durPick"></div>
+            </div>
+
+            <!-- 오버클럭 대상 디지몬에만 보인다 -->
+            <div class="rp-durpick" id="ocRow" hidden>
+                <label class="oc-switch">
+                    <span class="field-label mono">오버클럭</span>
+                    <input type="checkbox" id="ocSwitch" role="switch">
+                    <span class="oc-track" aria-hidden="true"><span class="oc-knob"></span></span>                </label>
+                <div class="journal-radios" id="ocLvPick" hidden></div>
             </div>
 
             <p class="rp-mode-note"><b>기본 광역기는 딜사이클에서 제외</b></p>

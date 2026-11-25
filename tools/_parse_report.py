@@ -8,6 +8,8 @@ Parse report/source/*.txt + deck.csv into js/report/reportMeta.js and js/report/
 
 파일명을 dNN 으로 두는 이유: 디지몬 이름에 콜론(라스트 에볼루션: 인연)이 들어가 파일명으로 못 쓴다.
 뒤의 M 은 전투 시간(분)이다.
+오버클럭 리포트(파일명 끝 -OC1~3)는 dNN-M-ocK.js 로 따로 둔다. 단계는 머리말의
+"오버클럭 K단계 (...)" 줄로 읽는다. 오버클럭 대상이 아닌 디지몬은 기본(0단계)만 있다.
 """
 import csv
 import json
@@ -32,6 +34,7 @@ PRIO_RE = re.compile(r'^\s*\d+\. (\d)스 (.+?)\s{2,}([\d,]+)/초\s+쿨 (\d+)초\
 BUILD_RE = re.compile(r'^\s*(\d+)위\s+(.+?)\s{2,}([\d,]+)\s+([+-][\d.]+)%')
 OPEN_RE = re.compile(r'(\d)스\(([\d.]+)\)')
 U_RE = re.compile(r'(\d+)U')
+OC_RE = re.compile(r'^오버클럭 (\d)단계 \((.+)\)$')
 
 num = lambda s: int(s.replace(',', ''))
 errors = []
@@ -77,8 +80,12 @@ def parse_report(path):
 
     name = next(l[4:].strip() for l in lines if l.startswith("### "))
     notes, blocks, cur = [], [], None
+    oc, oc_label = 0, ""
 
     for l in lines:
+        if cur is None and (m := OC_RE.match(l.strip())):
+            oc, oc_label = int(m.group(1)), m.group(2)
+            continue
         if cur is None and l.startswith("  ") and ":" in l and not l.startswith("["):
             notes.append(l.strip())
             continue
@@ -128,7 +135,7 @@ def parse_report(path):
             if not b[key]:
                 errors.append(f"{name} 덱 {i}: {key} 비어 있음")
 
-    return {"name": name, "notes": notes, "duration": duration,
+    return {"name": name, "notes": notes, "duration": duration, "oc": oc, "ocLabel": oc_label,
             "spTotal": sp_total, "blocks": blocks}
 
 
@@ -142,25 +149,33 @@ def main():
     if len(sp_totals) > 1:
         errors.append(f"리포트마다 스킬포인트가 다름: {sp_totals}")
 
-    # 리포트 1개 = 디지몬 1마리 × 전투 시간 1구간. 모든 디지몬이 모든 구간을 갖춰야 한다.
+    # 리포트 1개 = 디지몬 1마리 × 전투 시간 1구간 × 오버클럭 단계 하나.
+    # 모든 디지몬이 기본(0단계)으로 모든 구간을 갖춰야 하고, 오버클럭 단계가 있으면 그 단계도 모든 구간을 갖춰야 한다.
     durations = sorted({r["duration"] for r in reports})
     for d in durations:
         if d % 60:
             errors.append(f"전투 시간이 분 단위로 안 떨어짐: {d}초")
-    names = list(dict.fromkeys(r["name"] for r in reports))
+    names = list(dict.fromkeys(r["name"] for r in reports if r["oc"] == 0))
     by_pair = {}
     for r in reports:
-        if (r["name"], r["duration"]) in by_pair:
-            errors.append(f"{r['name']} {r['duration']}초: 리포트가 둘 이상")
-        by_pair[(r["name"], r["duration"])] = r
+        key = (r["name"], r["duration"], r["oc"])
+        if key in by_pair:
+            errors.append(f"{r['name']} {r['duration']}초 오버클럭 {r['oc']}단계: 리포트가 둘 이상")
+        by_pair[key] = r
+        if r["name"] not in names:
+            errors.append(f"{r['name']}: 오버클럭 리포트만 있고 기본 리포트가 없음")
+    oc_levels = {nm: sorted({r["oc"] for r in reports if r["name"] == nm and r["oc"]}) for nm in names}
     for nm in names:
-        missing = [f"{d}초" for d in durations if (nm, d) not in by_pair]
-        if missing:
-            errors.append(f"{nm}: {', '.join(missing)} 리포트 없음")
-        # 머리말 안내는 구간과 무관하므로 같아야 한다
-        notes = {tuple(by_pair[(nm, d)]["notes"]) for d in durations if (nm, d) in by_pair}
-        if len(notes) > 1:
-            errors.append(f"{nm}: 구간마다 머리말 안내가 다름")
+        for lv in [0] + oc_levels[nm]:
+            tag = f" 오버클럭 {lv}단계" if lv else ""
+            missing = [f"{d}초" for d in durations if (nm, d, lv) not in by_pair]
+            if missing:
+                errors.append(f"{nm}{tag}: {', '.join(missing)} 리포트 없음")
+            # 머리말 안내 · 오버클럭 설명은 구간과 무관하므로 같아야 한다. 단계마다는 다를 수 있다
+            heads = {(tuple(by_pair[(nm, d, lv)]["notes"]), by_pair[(nm, d, lv)]["ocLabel"])
+                     for d in durations if (nm, d, lv) in by_pair}
+            if len(heads) > 1:
+                errors.append(f"{nm}{tag}: 구간마다 머리말 안내가 다름")
 
     # 덱 집합은 리포트마다 다를 수 있다 — 디지몬이 늘면 덱도 같이 늘어난다.
     # 첫 리포트 순서를 기준으로 삼고 거기 없는 덱은 뒤에 붙여 기준 순서를 만든다.
@@ -210,11 +225,13 @@ def main():
         decks.append({"name": name, "type": typ, "u": int(m.group(1)) if m else 0,
                       "effects": csv_effects[ck], "members": csv_members.get(ck, [])})
 
-    # 머리말 안내는 구간이 달라도 같다(위에서 확인)
-    notes_of = {r["name"]: r["notes"] for r in reports}
+    # 머리말 안내는 구간이 달라도 같다(위에서 확인). 오버클럭 단계마다는 다를 수 있다
+    head = lambda nm, lv: by_pair[(nm, durations[0], lv)]
     # 결과가 있는 덱 수는 디지몬마다 다를 수 있다
-    deck_n = {r["name"]: sum(b is not None for b in r["blocks"]) for r in reports}
-    digimon = [{"name": nm, "file": f"d{i:02d}", "decks": deck_n[nm], "notes": notes_of[nm]}
+    deck_n = {nm: sum(b is not None for b in head(nm, 0)["blocks"]) for nm in names}
+    digimon = [{"name": nm, "file": f"d{i:02d}", "decks": deck_n[nm], "notes": head(nm, 0)["notes"],
+                "oc": [{"lv": lv, "label": head(nm, lv)["ocLabel"], "notes": head(nm, lv)["notes"]}
+                       for lv in oc_levels[nm]]}
                for i, nm in enumerate(names, 1)]
     if errors:
         print("\n".join(errors), file=sys.stderr)
@@ -234,20 +251,24 @@ def main():
         encoding="utf-8")
 
     for d, nm in zip(digimon, names):
-        for sec in durations:
-            body = [None if b is None else
-                    {k: v for k, v in b.items()
-                     if k not in ("deck", "type")}
-                    for b in by_pair[(nm, sec)]["blocks"]]
-            (OUT_DATA / f"{d['file']}-{sec // 60}.js").write_text(
-                banner + f"// {nm} · {sec // 60}분\n\nexport default {dump(body)};\n",
-                encoding="utf-8")
+        for lv in [0] + oc_levels[nm]:
+            sfx, tag = (f"-oc{lv}", f" · 오버클럭 {lv}단계") if lv else ("", "")
+            for sec in durations:
+                body = [None if b is None else
+                        {k: v for k, v in b.items()
+                         if k not in ("deck", "type")}
+                        for b in by_pair[(nm, sec, lv)]["blocks"]]
+                (OUT_DATA / f"{d['file']}-{sec // 60}{sfx}.js").write_text(
+                    banner + f"// {nm} · {sec // 60}분{tag}\n\nexport default {dump(body)};\n",
+                    encoding="utf-8")
 
     mins = ", ".join(f"{s // 60}분" for s in durations)
     print(f"디지몬 {len(digimon)}마리, 덱 {len(decks)}개, 구간 {mins}")
-    filled = sum(deck_n[nm] for nm in names) * len(durations)
-    grid = len(digimon) * len(decks) * len(durations)
+    filled = sum(b is not None for r in reports for b in r["blocks"])
+    grid = len(reports) * len(decks)
     print(f"결과 {filled}건" + (f" (빈 자리 {grid - filled}건)" if grid != filled else ""))
+    oc_names = [nm for nm in names if oc_levels[nm]]
+    print(f"오버클럭 {len(oc_names)}마리 — {' / '.join(oc_names)}")
     print(f"  {OUT_META}")
     print(f"  {OUT_DATA}\\d01-{durations[0] // 60}.js ~ d{len(digimon):02d}-{durations[-1] // 60}.js")
 
@@ -261,7 +282,7 @@ def main():
     # 결과가 없어 빈 자리로 남은 덱. 빈 덱이 같은 디지몬은 한 줄로 묶는다.
     holes = {}
     for nm in names:
-        gaps = tuple(k[0] for k, b in zip(deck_key, by_pair[(nm, durations[0])]["blocks"]) if b is None)
+        gaps = tuple(k[0] for k, b in zip(deck_key, by_pair[(nm, durations[0], 0)]["blocks"]) if b is None)
         if gaps:
             holes.setdefault(gaps, []).append(nm)
     for gaps, nms in holes.items():
