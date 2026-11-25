@@ -1281,9 +1281,10 @@ html.dark-mode .grade-sp { color: #b388f0; }
 .dg-group-meta { font-size: 0.8125rem; color: var(--ink-faint); }
 .dg-options {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
 }
+@media (max-width: 560px) { .dg-options { grid-template-columns: 1fr; } }
 .dg-option {
     display: flex;
     flex-direction: column;

@@ -64,11 +64,12 @@ export const GROUPS = [
         label: '상점가 · 악몽',
         count: 3,
         dungeons: [
+            // 화면에서 3열 2행: 1행 악몽, 2행 상점가 (각 HARD → NORMAL → EASY)
             { name: '악몽 [HARD]', t: 80 },
             { name: '악몽 [NORMAL]', t: 60 },
+            { name: '악몽 [EASY]', t: 10 },
             { name: '상점가 (Hard)', t: 32 },
             { name: '상점가 [NORMAL]', t: 20 },
-            { name: '악몽 [EASY]', t: 10 },
             { name: '상점가 [EASY]', t: 5 },
         ],
     },
