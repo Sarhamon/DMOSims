@@ -396,7 +396,8 @@ $('#ocRow').addEventListener('change', (e) => {
     if (e.target.id === 'ocSwitch') ocOn = e.target.checked;
     else if (e.target.name === 'ocLv') ocLv = Number(e.target.value);
     else return;
-    rows = null; writeHash();
+    /* 오버클럭은 주소에 안 남기므로 해시를 거치지 않고 다시 그린다 (스크롤 유지) */
+    rows = null; render();
 });
 $('#backBtn').addEventListener('click', () => {
     if (deckIdx !== null) deckIdx = null;
