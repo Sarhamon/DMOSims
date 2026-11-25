@@ -1228,3 +1228,68 @@ html.dark-mode .grade-sp { color: #b388f0; }
     .quest-row { flex-wrap: wrap; }
     .quest-reward { margin-left: 29px; }
 }
+
+/* ===== 던전 클리어 보상 ================================================== */
+.dg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+.dg-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--bg-elev);
+}
+/* 선택 가능한 카드 · 옵션 (buff-toggle 과 같은 선택 표시) */
+.dg-pick {
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.18s, background-color 0.18s;
+}
+.dg-pick:hover { border-color: var(--accent); }
+.dg-pick:has(input:checked) { border-color: var(--accent); background: var(--accent-wash); }
+.dg-pick:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dg-pick:has(input:checked) .dg-name { color: var(--accent-ink); }
+
+.dg-head { display: flex; align-items: center; gap: 10px; }
+.dg-head input { width: 15px; height: 15px; margin: 0; flex-shrink: 0; }
+.dg-name { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.02em; word-break: keep-all; }
+
+.dg-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.8125rem;
+    color: var(--ink-faint);
+}
+.dg-stat b {
+    font-family: var(--mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+
+/* 보상 횟수를 공유하는 묶음 그룹: 한 줄 전체를 쓰고 안에 던전별 옵션 */
+.dg-card--group { grid-column: 1 / -1; gap: 12px; }
+.dg-group-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.dg-group-meta { font-size: 0.8125rem; color: var(--ink-faint); }
+.dg-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+.dg-option {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--bg);
+}
